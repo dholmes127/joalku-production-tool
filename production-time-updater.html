@@ -230,8 +230,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const KEY = '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';
+  const WORKER = 'https://joalku-production-editer.dholmes127.workers.dev';
   const DB  = 'ec892733827e8384a0e10137c50c9d16';
+  const BASE = WORKER;
 
   let allPages = [];
   let openId = null;
@@ -259,11 +260,9 @@
     const body = { page_size: 100 };
     if (filter) body.filter = filter;
     if (sorts) body.sorts = sorts;
-    const r = await fetch(`https://joalku-production-editer.dholmes127.workers.dev/v1/databases/${DB}/query`, {
+    const r = await fetch(`${WORKER}/v1/databases/${DB}/query`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${KEY}`,
-        'Notion-Version': '2022-06-28',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
@@ -382,11 +381,9 @@
     const btn = document.getElementById('btn-'+id);
     btn.disabled=true; btn.textContent='Saving…';
     try {
-      const r = await fetch(`https://joalku-production-editer.dholmes127.workers.dev/v1/pages/${id}`, {
+      const r = await fetch(`${WORKER}/v1/pages/${id}`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${KEY}`,
-          'Notion-Version': '2022-06-28',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ properties: { 'Time of Concrete at Site': { rich_text: [{ type:'text', text:{ content:formatted } }] } } })

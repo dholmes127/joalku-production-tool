@@ -259,7 +259,7 @@
     const body = { page_size: 100 };
     if (filter) body.filter = filter;
     if (sorts) body.sorts = sorts;
-    const r = await fetch(`https://api.notion.com/v1/databases/${DB}/query`, {
+    const r = await fetch(`https://joalku-production-editer.dholmes127.workers.dev/v1/databases/${DB}/query`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${KEY}`,
@@ -382,7 +382,7 @@
     const btn = document.getElementById('btn-'+id);
     btn.disabled=true; btn.textContent='Saving…';
     try {
-      const r = await fetch(`https://api.notion.com/v1/pages/${id}`, {
+      const r = await fetch(`https://joalku-production-editer.dholmes127.workers.dev/v1/pages/${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${KEY}`,

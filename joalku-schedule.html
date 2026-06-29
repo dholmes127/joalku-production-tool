@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Schedule — Joalku</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f9f8f6;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  .page-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+
+  .page-sub {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 28px;
+  }
+
+  .search-wrap {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    pointer-events: none;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 11px 14px 11px 40px;
+    border: 1px solid #e0ddd8;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus { border-color: #f28324; }
+  input[type="text"]::placeholder { color: #bbb; }
+
+  input[type="time"] {
+    padding: 9px 12px;
+    border: 1px solid #e0ddd8;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="time"]:focus { border-color: #f28324; }
+
+  .prod-row {
+    background: #fff;
+    border: 1px solid #ece9e3;
+    border-radius: 8px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 2px;
+  }
+
+  .prod-row:hover { border-color: #d4c9b8; }
+  .prod-row.open { border-color: #f28324; box-shadow: 0 0 0 1px #f28324; border-radius: 8px 8px 0 0; margin-bottom: 0; }
+
+  .prod-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+
+  .prod-meta {
+    font-size: 12px;
+    color: #999;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .time-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
+  .time-pill.tbd { background: #fff3e0; color: #c65a00; }
+  .time-pill.set { background: #e8f5e9; color: #1b5e20; }
+
+  .detail-panel {
+    background: #fafaf8;
+    border: 1px solid #f28324;
+    border-top: none;
+    box-shadow: 0 0 0 1px #f28324;
+    border-radius: 0 0 8px 8px;
+    padding: 16px 20px 20px;
+    margin-bottom: 10px;
+    display: none;
+  }
+
+  .detail-panel.visible { display: block; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px 20px;
+    margin-bottom: 16px;
+  }
+
+  .detail-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #bbb;
+    margin-bottom: 2px;
+  }
+
+  .detail-val { font-size: 13px; color: #333; }
+
+  .update-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid #ece9e3;
+  }
+
+  .update-label { font-size: 13px; color: #666; white-space: nowrap; }
+
+  .btn-save {
+    background: #f28324;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-save:hover { background: #d4711e; }
+  .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .state-msg {
+    text-align: center;
+    padding: 48px 0;
+    color: #bbb;
+    font-size: 14px;
+  }
+
+  .state-msg strong { display: block; color: #888; margin-bottom: 4px; font-size: 15px; }
+
+  .loading { display: flex; gap: 5px; justify-content: center; padding: 48px 0; }
+  .loading span {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #f28324; opacity: 0.4;
+    animation: pulse 1.2s infinite;
+  }
+  .loading span:nth-child(2) { animation-delay: 0.2s; }
+  .loading span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: #1a1a1a; color: #fff;
+    padding: 10px 20px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    transition: transform 0.25s ease;
+    z-index: 100; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.ok { background: #1b5e20; }
+  .toast.err { background: #b71c1c; }
+
+  .results-header { font-size: 12px; color: #bbb; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="page-title">Production Schedule</p>
+  <p class="page-sub" id="pageSub">Loading…</p>
+
+  <div class="search-wrap">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="searchInput" placeholder="Search by name, client, or project…" oninput="onSearch()" />
+  </div>
+
+  <div id="resultsMeta" class="results-header"></div>
+  <div id="list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const WORKER = 'https://joalku-production-editer.dholmes127.workers.dev';
+  const DB  = 'ec892733827e8384a0e10137c50c9d16';
+  const BASE = WORKER;
+
+  let allPages = [];
+  let openId = null;
+  let searchTimer = null;
+
+  window.onload = load;
+
+  async function load() {
+    document.getElementById('list').innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
+    try {
+      const data = await query(null, [{ property: 'Date of Supply', direction: 'ascending' }]);
+      allPages = data.results;
+      const tbd = allPages.filter(p => getT(p,'Time of Concrete at Site') === 'TBD').length;
+      document.getElementById('pageSub').textContent = tbd > 0
+        ? `${tbd} production${tbd>1?'s':''} with time TBD`
+        : allPages.length ? 'All times confirmed' : 'No productions yet';
+      render(allPages);
+    } catch(e) {
+      document.getElementById('pageSub').textContent = '';
+      document.getElementById('list').innerHTML = `<div class="state-msg"><strong>Could not connect</strong>${e.message}</div>`;
+    }
+  }
+
+  async function query(filter, sorts) {
+    const body = { page_size: 100 };
+    if (filter) body.filter = filter;
+    if (sorts) body.sorts = sorts;
+    const r = await fetch(`${WORKER}/v1/databases/${DB}/query`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message || 'API error'); }
+    return r.json();
+  }
+
+  function getT(page, name, type='rich_text') {
+    const p = page.properties[name];
+    if (!p) return '—';
+    if (type==='title')      return p.title?.[0]?.plain_text || '—';
+    if (type==='rich_text')  return p.rich_text?.[0]?.plain_text || '—';
+    if (type==='date')       return p.date?.start || '—';
+    if (type==='number')     return p.number != null ? p.number+'m³' : '—';
+    if (type==='select')     return p.select?.name || '—';
+    return '—';
+  }
+
+  function fmtDate(d) {
+    if (!d||d==='—') return '—';
+    const dt = new Date(d+'T00:00:00');
+    return dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  }
+
+  function render(pages) {
+    const list = document.getElementById('list');
+    const meta = document.getElementById('resultsMeta');
+    if (!pages.length) {
+      meta.textContent = '';
+      list.innerHTML = '<div class="state-msg"><strong>No productions found</strong>Try a different search term</div>';
+      return;
+    }
+    meta.textContent = `${pages.length} production${pages.length!==1?'s':''}`;
+    list.innerHTML = '';
+    pages.forEach(p => {
+      const id = p.id;
+      const name     = getT(p,'Production Name','title');
+      const date     = getT(p,'Date of Supply','date');
+      const client   = getT(p,'Client Name');
+      const project  = getT(p,'Project Name');
+      const time     = getT(p,'Time of Concrete at Site');
+      const location = getT(p,'Location');
+      const volume   = getT(p,'Volume (m³)','number');
+      const concrete = getT(p,'Class of Concrete');
+      const discharge= getT(p,'Mode of Discharge','select');
+      const cast     = getT(p,'Cast Elements');
+      const isTbd    = time==='TBD'||time==='—';
+
+      const row = document.createElement('div');
+      row.className = 'prod-row' + (openId===id?' open':'');
+      row.dataset.id = id;
+      row.innerHTML = `
+        <div style="flex:1;min-width:0">
+          <div class="prod-name">${name}</div>
+          <div class="prod-meta">
+            <span>${fmtDate(date)}</span>
+            ${client!=='—'?`<span>${client}</span>`:''}
+            ${project!=='—'?`<span>${project}</span>`:''}
+          </div>
+        </div>
+        <div class="time-pill ${isTbd?'tbd':'set'}">${isTbd?'TBD':time}</div>
+      `;
+      row.onclick = () => toggleDetail(id);
+      list.appendChild(row);
+
+      const detail = document.createElement('div');
+      detail.className = 'detail-panel' + (openId===id?' visible':'');
+      detail.id = 'detail-'+id;
+      detail.innerHTML = `
+        <div class="detail-grid">
+          <div><div class="detail-label">Location</div><div class="detail-val">${location}</div></div>
+          <div><div class="detail-label">Volume</div><div class="detail-val">${volume}</div></div>
+          <div><div class="detail-label">Discharge</div><div class="detail-val">${discharge}</div></div>
+          <div><div class="detail-label">Concrete class</div><div class="detail-val">${concrete}</div></div>
+          ${cast!=='—'?`<div style="grid-column:span 2"><div class="detail-label">Cast elements</div><div class="detail-val">${cast}</div></div>`:''}
+        </div>
+        <div class="update-row">
+          <span class="update-label">Update time</span>
+          <input type="time" id="time-${id}" value="${parseTime(time)}" />
+          <button class="btn-save" id="btn-${id}" onclick="saveTime('${id}',event)">Save</button>
+        </div>
+      `;
+      list.appendChild(detail);
+    });
+  }
+
+  function parseTime(t) {
+    if (!t||t==='TBD'||t==='—') return '';
+    const m = t.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
+    if (!m) return '';
+    let h = parseInt(m[1]), min = m[2], ap = (m[3]||'').toLowerCase();
+    if (ap==='pm'&&h!==12) h+=12;
+    if (ap==='am'&&h===12) h=0;
+    return `${String(h).padStart(2,'0')}:${min}`;
+  }
+
+  function toggleDetail(id) {
+    openId = openId===id ? null : id;
+    document.querySelectorAll('.prod-row').forEach(r => r.classList.toggle('open', r.dataset.id===openId));
+    document.querySelectorAll('.detail-panel').forEach(d => d.classList.toggle('visible', d.id==='detail-'+openId));
+    if (openId) {
+      const el = document.getElementById('detail-'+openId);
+      el && el.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  }
+
+  async function saveTime(id, e) {
+    e.stopPropagation();
+    const raw = document.getElementById('time-'+id).value;
+    if (!raw) { toast('Enter a time first','err'); return; }
+    const [h,m] = raw.split(':').map(Number);
+    const ap = h>=12?'pm':'am';
+    const h12 = h%12||12;
+    const formatted = `${h12}:${String(m).padStart(2,'0')} ${ap}`;
+    const btn = document.getElementById('btn-'+id);
+    btn.disabled=true; btn.textContent='Saving…';
+    try {
+      const r = await fetch(`${WORKER}/v1/pages/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ properties: { 'Time of Concrete at Site': { rich_text: [{ type:'text', text:{ content:formatted } }] } } })
+      });
+      if (!r.ok) throw new Error('Save failed');
+      toast(`Time set to ${formatted}`,'ok');
+      btn.textContent='Saved ✓';
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='Save'; },2000);
+      openId=null;
+      load();
+    } catch(err) {
+      toast('Failed to save','err');
+      btn.disabled=false; btn.textContent='Save';
+    }
+  }
+
+  function onSearch() {
+    clearTimeout(searchTimer);
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (!q) { render(allPages); return; }
+    searchTimer = setTimeout(()=>{
+      const filtered = allPages.filter(p => {
+        return getT(p,'Production Name','title').toLowerCase().includes(q)
+            || getT(p,'Client Name').toLowerCase().includes(q)
+            || getT(p,'Project Name').toLowerCase().includes(q);
+      });
+      render(filtered);
+    }, 200);
+  }
+
+  function toast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent=msg; t.className='toast show '+type;
+    setTimeout(()=>t.className='toast',3000);
+  }
+</script>
+</body>
+</html>

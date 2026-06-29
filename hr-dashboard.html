@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Dashboard — Joalku</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f9f8f6; color: #1a1a1a; min-height: 100vh;
+  }
+
+  .page { max-width: 800px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* Header */
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: #999; }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 28px; }
+  .stat-card { background: #fff; border: 1px solid #ece9e3; border-radius: 10px; padding: 14px 16px; }
+  .stat-num { font-size: 24px; font-weight: 500; color: #1a1a1a; }
+  .stat-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; margin-top: 3px; }
+  .stat-card.warn .stat-num { color: #f28324; }
+
+  /* Filters */
+  .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; pointer-events: none; }
+
+  input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="tel"] {
+    width: 100%; padding: 9px 12px; border: 1px solid #e0ddd8;
+    border-radius: 8px; font-size: 14px; color: #1a1a1a;
+    background: #fff; outline: none; transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus,
+  input[type="email"]:focus, input[type="tel"]:focus { border-color: #f28324; }
+  input::placeholder { color: #bbb; }
+  #searchInput { padding-left: 36px; }
+
+  select {
+    padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 8px;
+    font-size: 13px; color: #1a1a1a; background: #fff; outline: none;
+    cursor: pointer; appearance: none; transition: border-color 0.15s;
+  }
+  select:focus { border-color: #f28324; }
+
+  /* Employee list */
+  .emp-row {
+    background: #fff; border: 1px solid #ece9e3; border-radius: 8px;
+    padding: 14px 18px; cursor: pointer; transition: border-color 0.15s;
+    display: flex; align-items: center; gap: 14px; margin-bottom: 2px;
+  }
+  .emp-row:hover { border-color: #d4c9b8; }
+  .emp-row.open { border-color: #f28324; box-shadow: 0 0 0 1px #f28324; border-radius: 8px 8px 0 0; margin-bottom: 0; }
+
+  .emp-avatar {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: #fff;
+  }
+
+  .emp-info { flex: 1; min-width: 0; }
+  .emp-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .emp-meta { font-size: 12px; color: #999; display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .emp-badges { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 20px; white-space: nowrap;
+  }
+  .badge.current { background: #e8f5e9; color: #1b5e20; }
+  .badge.former { background: #fce4ec; color: #880e4f; }
+  .badge.leave-low { background: #fff3e0; color: #c65a00; }
+  .badge.leave-ok { background: #e8f5e9; color: #1b5e20; }
+
+  /* Detail panel */
+  .detail-panel {
+    background: #fafaf8; border: 1px solid #f28324;
+    border-top: none; box-shadow: 0 0 0 1px #f28324;
+    border-radius: 0 0 8px 8px; padding: 0;
+    margin-bottom: 10px; display: none;
+  }
+  .detail-panel.visible { display: block; }
+
+  /* Tabs */
+  .panel-tabs { display: flex; border-bottom: 1px solid #ece9e3; background: #fff; }
+  .panel-tab {
+    padding: 12px 18px; font-size: 13px; font-weight: 500;
+    color: #999; border: none; background: none; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .panel-tab.active { color: #f28324; border-bottom-color: #f28324; }
+
+  .panel-content { padding: 20px; display: none; }
+  .panel-content.active { display: block; }
+
+  /* Form grid */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; margin-bottom: 5px; }
+  .form-group.full { grid-column: span 2; }
+
+  /* Leave summary */
+  .leave-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .leave-card { background: #fff; border: 1px solid #ece9e3; border-radius: 8px; padding: 12px; text-align: center; }
+  .leave-card .num { font-size: 22px; font-weight: 500; }
+  .leave-card .lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: #bbb; margin-top: 2px; }
+  .leave-card.warn .num { color: #f28324; }
+
+  /* Docs list */
+  .docs-list { display: flex; flex-direction: column; gap: 8px; }
+  .doc-item {
+    background: #fff; border: 1px solid #ece9e3; border-radius: 8px;
+    padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+  }
+  .doc-icon { font-size: 18px; flex-shrink: 0; }
+  .doc-name { font-size: 13px; font-weight: 500; }
+  .doc-type { font-size: 11px; color: #999; margin-top: 2px; }
+  .doc-link { margin-left: auto; font-size: 12px; color: #f28324; text-decoration: none; font-weight: 600; }
+  .doc-link:hover { text-decoration: underline; }
+
+  /* Action row */
+  .action-row { display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid #ece9e3; }
+  .btn-save {
+    background: #f28324; color: #fff; border: none; border-radius: 8px;
+    padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-save:hover { background: #d4711e; }
+  .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-cancel {
+    background: none; color: #999; border: 1px solid #e0ddd8;
+    border-radius: 8px; padding: 10px 16px; font-size: 13px; cursor: pointer;
+  }
+  .btn-cancel:hover { background: #f3f3f1; }
+
+  /* States */
+  .state-msg { text-align: center; padding: 48px 0; color: #bbb; font-size: 14px; }
+  .state-msg strong { display: block; color: #888; margin-bottom: 4px; font-size: 15px; }
+  .loading { display: flex; gap: 5px; justify-content: center; padding: 48px 0; }
+  .loading span { width: 7px; height: 7px; border-radius: 50%; background: #f28324; opacity: 0.4; animation: pulse 1.2s infinite; }
+  .loading span:nth-child(2) { animation-delay: 0.2s; }
+  .loading span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: #1a1a1a; color: #fff; padding: 10px 20px;
+    border-radius: 8px; font-size: 13px; font-weight: 500;
+    transition: transform 0.25s ease; z-index: 100; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.ok { background: #1b5e20; }
+  .toast.err { background: #b71c1c; }
+
+  .results-header { font-size: 12px; color: #bbb; margin-bottom: 10px; }
+
+  @media (max-width: 560px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .leave-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: span 1; }
+    .emp-badges { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <p class="page-title">HR Dashboard</p>
+    <p class="page-sub" id="pageSub">Loading…</p>
+  </div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total staff</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-current">—</div><div class="stat-lbl">Current</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-depts">—</div><div class="stat-lbl">Departments</div></div>
+    <div class="stat-card warn"><div class="stat-num" id="s-lowleave">—</div><div class="stat-lbl">Low leave (&lt;5 days)</div></div>
+  </div>
+
+  <div class="filters">
+    <div class="search-wrap">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search by name, role, department…" oninput="onSearch()" />
+    </div>
+    <select id="deptFilter" onchange="onSearch()">
+      <option value="">All departments</option>
+      <option>Administration</option>
+      <option>Maintenance</option>
+      <option>Production</option>
+      <option>Sales</option>
+      <option>Other Departments</option>
+    </select>
+    <select id="statusFilter" onchange="onSearch()">
+      <option value="">All staff</option>
+      <option value="Current">Current</option>
+      <option value="Former">Former</option>
+    </select>
+  </div>
+
+  <div id="resultsMeta" class="results-header"></div>
+  <div id="list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const WORKER = 'https://joalku-production-editer.dholmes127.workers.dev';
+  const EMP_DB = 'eed92733827e8247a88f07bf685efb22';
+  const LEAVE_DB = '1c392733827e83c7a94a07d5beba9dda';
+  const DOC_DB = '22c92733827e827cbc10077280514965';
+
+  let allEmployees = [];
+  let allLeave = [];
+  let allDocs = [];
+  let openId = null;
+  let activeTab = {};
+  let searchTimer = null;
+
+  const DEPT_COLORS = {
+    'Administration': '#1a6fc4', 'Maintenance': '#a05c00',
+    'Production': '#b71c1c', 'Sales': '#1b5e20', 'Other Departments': '#555'
+  };
+
+  function avatarColor(dept) { return DEPT_COLORS[dept] || '#888'; }
+  function initials(name) {
+    if (!name||name==='—') return '?';
+    return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  }
+
+  window.onload = load;
+
+  async function load() {
+    document.getElementById('list').innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
+    try {
+      const [empData, leaveData, docData] = await Promise.all([
+        queryDB(EMP_DB, null, [{property:'Name',direction:'ascending'}]),
+        queryDB(LEAVE_DB, null, null),
+        queryDB(DOC_DB, null, null)
+      ]);
+      allEmployees = empData.results;
+      allLeave = leaveData.results;
+      allDocs = docData.results;
+      updateStats();
+      document.getElementById('pageSub').textContent = `${allEmployees.length} employees · ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`;
+      render(allEmployees);
+    } catch(e) {
+      document.getElementById('pageSub').textContent = '';
+      document.getElementById('list').innerHTML = `<div class="state-msg"><strong>Could not connect</strong>${e.message}</div>`;
+    }
+  }
+
+  async function queryDB(dbId, filter, sorts) {
+    const body = { page_size: 100 };
+    if (filter) body.filter = filter;
+    if (sorts) body.sorts = sorts;
+    const r = await fetch(`${WORKER}/v1/databases/${dbId}/query`, {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message||'API error'); }
+    return r.json();
+  }
+
+  function getT(page, name, type='rich_text') {
+    const p = page.properties[name];
+    if (!p) return '—';
+    if (type==='title')     return p.title?.[0]?.plain_text||'—';
+    if (type==='rich_text') return p.rich_text?.[0]?.plain_text||'—';
+    if (type==='select')    return p.select?.name||'—';
+    if (type==='email')     return p.email||'—';
+    if (type==='phone')     return p.phone_number||'—';
+    if (type==='date')      return p.date?.start||'—';
+    if (type==='checkbox')  return p.checkbox||false;
+    if (type==='formula')   return p.formula?.number??p.formula?.string??'—';
+    if (type==='number')    return p.number??null;
+    return '—';
+  }
+
+  function getLeaveForEmployee(empName) {
+    return allLeave.find(l => {
+      const rel = l.properties['Employee']?.relation;
+      if (rel && rel.length > 0) {
+        const empId = rel[0].id;
+        return allEmployees.find(e => e.id === empId && getT(e,'Name','title') === empName);
+      }
+      const n = getT(l,'Name','title');
+      return n.includes(empName.split(' ')[0]);
+    });
+  }
+
+  function getDocsForEmployee(empName) {
+    return allDocs.filter(d => {
+      const n = getT(d,'Name','title');
+      return n.includes(empName.split(' ')[0]);
+    });
+  }
+
+  function updateStats() {
+    const current = allEmployees.filter(e => getT(e,'Status','select')==='Current').length;
+    const depts = new Set(allEmployees.map(e => getT(e,'Department','select')).filter(d=>d!=='—')).size;
+    let lowLeave = 0;
+    allLeave.forEach(l => {
+      const total = getT(l,'Total Leave Days','number')||0;
+      const taken = getT(l,'Leave Days Taken','number')||0;
+      if ((total-taken) <= 5 && total > 0) lowLeave++;
+    });
+    document.getElementById('s-total').textContent = allEmployees.length;
+    document.getElementById('s-current').textContent = current;
+    document.getElementById('s-depts').textContent = depts;
+    document.getElementById('s-lowleave').textContent = lowLeave;
+  }
+
+  function fmtDate(d) {
+    if (!d||d==='—') return '—';
+    return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  }
+
+  function render(employees) {
+    const list = document.getElementById('list');
+    const meta = document.getElementById('resultsMeta');
+    if (!employees.length) {
+      meta.textContent = '';
+      list.innerHTML = '<div class="state-msg"><strong>No employees found</strong>Try a different search or filter</div>';
+      return;
+    }
+    meta.textContent = `${employees.length} employee${employees.length!==1?'s':''}`;
+    list.innerHTML = '';
+
+    employees.forEach(emp => {
+      const id = emp.id;
+      const name   = getT(emp,'Name','title');
+      const role   = getT(emp,'Role','select');
+      const dept   = getT(emp,'Department','select');
+      const status = getT(emp,'Status','select');
+      const email  = getT(emp,'Email','email');
+      const phone  = getT(emp,'Phone','phone');
+      const startCo= getT(emp,'Start date in company','date');
+      const startPos=getT(emp,'Start date in position','date');
+      const salary = getT(emp,'Fixed salary','number');
+      const bonus  = getT(emp,'Annual bonus','number');
+
+      const leaveRec = getLeaveForEmployee(name);
+      const total  = leaveRec ? (getT(leaveRec,'Total Leave Days','number')||0) : 0;
+      const taken  = leaveRec ? (getT(leaveRec,'Leave Days Taken','number')||0) : 0;
+      const sick   = leaveRec ? (getT(leaveRec,'Sick Leave Days','number')||0) : 0;
+      const left   = total - taken;
+      const isLow  = total > 0 && left <= 5;
+
+      const docs = getDocsForEmployee(name);
+
+      const row = document.createElement('div');
+      row.className = 'emp-row' + (openId===id?' open':'');
+      row.dataset.id = id;
+      row.innerHTML = `
+        <div class="emp-avatar" style="background:${avatarColor(dept)}">${initials(name)}</div>
+        <div class="emp-info">
+          <div class="emp-name">${name}</div>
+          <div class="emp-meta">
+            ${role!=='—'?`<span>${role}</span>`:''}
+            ${dept!=='—'?`<span>${dept}</span>`:''}
+            ${email!=='—'?`<span>${email}</span>`:''}
+          </div>
+        </div>
+        <div class="emp-badges">
+          <div class="badge ${status==='Current'?'current':'former'}">${status}</div>
+          ${total>0?`<div class="badge ${isLow?'leave-low':'leave-ok'}">${left}d left</div>`:''}
+        </div>
+      `;
+      row.onclick = () => toggleDetail(id);
+      list.appendChild(row);
+
+      const tab = activeTab[id] || 'profile';
+      const detail = document.createElement('div');
+      detail.className = 'detail-panel' + (openId===id?' visible':'');
+      detail.id = 'detail-'+id;
+
+      const docsHtml = docs.length ? docs.map(d => {
+        const dn = getT(d,'Name','title');
+        const dt = getT(d,'Document Type','select');
+        const du = d.url || `https://app.notion.com/p/${d.id.replace(/-/g,'')}`;
+        return `<div class="doc-item">
+          <div class="doc-icon">📄</div>
+          <div>
+            <div class="doc-name">${dn}</div>
+            ${dt!=='—'?`<div class="doc-type">${dt}</div>`:''}
+          </div>
+          <a href="${du}" target="_blank" class="doc-link">Open →</a>
+        </div>`;
+      }).join('') : '<div class="state-msg" style="padding:24px 0"><strong>No documents found</strong></div>';
+
+      detail.innerHTML = `
+        <div class="panel-tabs">
+          <button class="panel-tab ${tab==='profile'?'active':''}" onclick="switchTab('${id}','profile',event)">Profile</button>
+          <button class="panel-tab ${tab==='leave'?'active':''}" onclick="switchTab('${id}','leave',event)">Leave</button>
+          <button class="panel-tab ${tab==='docs'?'active':''}" onclick="switchTab('${id}','docs',event)">Documents (${docs.length})</button>
+        </div>
+
+        <div class="panel-content ${tab==='profile'?'active':''}" id="tab-profile-${id}">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Full name</label>
+              <input type="text" id="f-name-${id}" value="${name!=='—'?name:''}" />
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <select id="f-role-${id}">
+                <option value="">— select —</option>
+                ${['Administrator','Electrician','Mechanic','Welder','Batching Plant Operator','Driver','Logistics','Quality Control','Cleaner','Security','Sales Representative'].map(r=>`<option ${role===r?'selected':''}>${r}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Department</label>
+              <select id="f-dept-${id}">
+                <option value="">— select —</option>
+                ${['Administration','Maintenance','Production','Sales','Other Departments'].map(d=>`<option ${dept===d?'selected':''}>${d}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="f-status-${id}">
+                <option ${status==='Current'?'selected':''}>Current</option>
+                <option ${status==='Former'?'selected':''}>Former</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="f-email-${id}" value="${email!=='—'?email:''}" />
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" id="f-phone-${id}" value="${phone!=='—'?phone:''}" />
+            </div>
+            <div class="form-group">
+              <label>Start date in company</label>
+              <input type="date" id="f-startco-${id}" value="${startCo!=='—'?startCo:''}" />
+            </div>
+            <div class="form-group">
+              <label>Start date in position</label>
+              <input type="date" id="f-startpos-${id}" value="${startPos!=='—'?startPos:''}" />
+            </div>
+            <div class="form-group">
+              <label>Fixed salary (GHS)</label>
+              <input type="number" id="f-salary-${id}" value="${salary!=null?salary:''}" />
+            </div>
+            <div class="form-group">
+              <label>Annual bonus (GHS)</label>
+              <input type="number" id="f-bonus-${id}" value="${bonus!=null?bonus:''}" />
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn-save" id="btn-profile-${id}" onclick="saveProfile('${id}',event)">Save changes</button>
+            <button class="btn-cancel" onclick="closeDetail(event)">Cancel</button>
+          </div>
+        </div>
+
+        <div class="panel-content ${tab==='leave'?'active':''}" id="tab-leave-${id}">
+          ${leaveRec ? `
+          <div class="leave-grid">
+            <div class="leave-card"><div class="num">${total}</div><div class="lbl">Total days</div></div>
+            <div class="leave-card"><div class="num">${taken}</div><div class="lbl">Days taken</div></div>
+            <div class="leave-card ${isLow?'warn':''}"><div class="num">${left}</div><div class="lbl">Days left</div></div>
+            <div class="leave-card"><div class="num">${sick}</div><div class="lbl">Sick days</div></div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Leave Days Taken</label>
+              <input type="number" id="f-taken-${id}" value="${taken}" min="0" step="0.5" />
+            </div>
+            <div class="form-group">
+              <label>Sick Leave Days</label>
+              <input type="number" id="f-sick-${id}" value="${sick}" min="0" step="0.5" />
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn-save" id="btn-leave-${id}" onclick="saveLeave('${id}','${leaveRec.id}',event)">Save leave</button>
+            <button class="btn-cancel" onclick="closeDetail(event)">Cancel</button>
+          </div>
+          ` : '<div class="state-msg" style="padding:24px 0"><strong>No leave record found</strong>Add a leave entry in Notion for this employee</div>'}
+        </div>
+
+        <div class="panel-content ${tab==='docs'?'active':''}" id="tab-docs-${id}">
+          <div class="docs-list">${docsHtml}</div>
+        </div>
+      `;
+      list.appendChild(detail);
+    });
+  }
+
+  function toggleDetail(id) {
+    openId = openId===id ? null : id;
+    document.querySelectorAll('.emp-row').forEach(r => r.classList.toggle('open', r.dataset.id===openId));
+    document.querySelectorAll('.detail-panel').forEach(d => d.classList.toggle('visible', d.id==='detail-'+openId));
+    if (openId) {
+      const el = document.getElementById('detail-'+openId);
+      el && el.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  }
+
+  function closeDetail(e) {
+    e.stopPropagation();
+    openId = null;
+    document.querySelectorAll('.emp-row').forEach(r => r.classList.remove('open'));
+    document.querySelectorAll('.detail-panel').forEach(d => d.classList.remove('visible'));
+  }
+
+  function switchTab(id, tab, e) {
+    e.stopPropagation();
+    activeTab[id] = tab;
+    const panel = document.getElementById('detail-'+id);
+    panel.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+    panel.querySelectorAll('.panel-content').forEach(c => c.classList.remove('active'));
+    e.target.classList.add('active');
+    const content = document.getElementById(`tab-${tab}-${id}`);
+    if (content) content.classList.add('active');
+  }
+
+  async function saveProfile(id, e) {
+    e.stopPropagation();
+    const btn = document.getElementById('btn-profile-'+id);
+    btn.disabled=true; btn.textContent='Saving…';
+
+    const name    = document.getElementById('f-name-'+id).value.trim();
+    const role    = document.getElementById('f-role-'+id).value;
+    const dept    = document.getElementById('f-dept-'+id).value;
+    const status  = document.getElementById('f-status-'+id).value;
+    const email   = document.getElementById('f-email-'+id).value.trim();
+    const phone   = document.getElementById('f-phone-'+id).value.trim();
+    const startCo = document.getElementById('f-startco-'+id).value;
+    const startPos= document.getElementById('f-startpos-'+id).value;
+    const salary  = parseFloat(document.getElementById('f-salary-'+id).value)||null;
+    const bonus   = parseFloat(document.getElementById('f-bonus-'+id).value)||null;
+
+    const properties = {
+      'Name': { title: [{ type:'text', text:{ content:name } }] },
+      'Email': { email: email||null },
+      'Phone': { phone_number: phone||null },
+    };
+    if (role) properties['Role'] = { select: { name: role } };
+    if (dept) properties['Department'] = { select: { name: dept } };
+    if (status) properties['Status'] = { select: { name: status } };
+    if (startCo) properties['Start date in company'] = { date: { start: startCo } };
+    if (startPos) properties['Start date in position'] = { date: { start: startPos } };
+    if (salary !== null) properties['Fixed salary'] = { number: salary };
+    if (bonus !== null) properties['Annual bonus'] = { number: bonus };
+
+    try {
+      const r = await fetch(`${WORKER}/v1/pages/${id}`, {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ properties })
+      });
+      if (!r.ok) throw new Error();
+      toast('Profile saved', 'ok');
+      btn.textContent='Saved ✓';
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='Save changes'; },2000);
+      openId=null; load();
+    } catch {
+      toast('Failed to save','err');
+      btn.disabled=false; btn.textContent='Save changes';
+    }
+  }
+
+  async function saveLeave(empId, leaveId, e) {
+    e.stopPropagation();
+    const btn = document.getElementById('btn-leave-'+empId);
+    btn.disabled=true; btn.textContent='Saving…';
+    const taken = parseFloat(document.getElementById('f-taken-'+empId).value)||0;
+    const sick  = parseFloat(document.getElementById('f-sick-'+empId).value)||0;
+    try {
+      const r = await fetch(`${WORKER}/v1/pages/${leaveId}`, {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ properties: {
+          'Leave Days Taken': { number: taken },
+          'Sick Leave Days': { number: sick }
+        }})
+      });
+      if (!r.ok) throw new Error();
+      toast('Leave updated', 'ok');
+      btn.textContent='Saved ✓';
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='Save leave'; },2000);
+      openId=null; load();
+    } catch {
+      toast('Failed to save','err');
+      btn.disabled=false; btn.textContent='Save leave';
+    }
+  }
+
+  function onSearch() {
+    clearTimeout(searchTimer);
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const dept = document.getElementById('deptFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    searchTimer = setTimeout(()=>{
+      let filtered = allEmployees;
+      if (q) filtered = filtered.filter(e =>
+        getT(e,'Name','title').toLowerCase().includes(q) ||
+        getT(e,'Role','select').toLowerCase().includes(q) ||
+        getT(e,'Department','select').toLowerCase().includes(q) ||
+        getT(e,'Email','email').toLowerCase().includes(q)
+      );
+      if (dept) filtered = filtered.filter(e => getT(e,'Department','select')===dept);
+      if (status) filtered = filtered.filter(e => getT(e,'Status','select')===status);
+      render(filtered);
+    }, 200);
+  }
+
+  function toast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent=msg; t.className='toast show '+type;
+    setTimeout(()=>t.className='toast',3000);
+  }
+</script>
+</body>
+</html>

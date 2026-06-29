@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Calendar — Joalku</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f9f8f6; color: #1a1a1a; min-height: 100vh;
+  }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* Header */
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .cal-title { font-size: 22px; font-weight: 500; }
+  .cal-nav { display: flex; align-items: center; gap: 10px; }
+  .nav-btn { background: #fff; border: 1px solid #e0ddd8; border-radius: 8px; padding: 8px 14px; font-size: 16px; cursor: pointer; color: #555; font-family: inherit; transition: background 0.15s; }
+  .nav-btn:hover { background: #f0efeb; }
+  .nav-label { font-size: 16px; font-weight: 500; min-width: 160px; text-align: center; }
+
+  /* View tabs */
+  .view-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #fff; border: 1px solid #e0ddd8; border-radius: 10px; padding: 4px; width: fit-content; }
+  .view-tab { padding: 8px 16px; font-size: 16px; font-weight: 500; border: none; background: none; cursor: pointer; border-radius: 7px; color: #999; transition: background 0.15s, color 0.15s; font-family: inherit; }
+  .view-tab.active { background: #f28324; color: #fff; }
+
+  /* Add button */
+  .add-btn { background: #f28324; color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: inherit; display: none; }
+  .add-btn:hover { background: #d4711e; }
+  .add-btn.visible { display: block; }
+
+  /* Loading */
+  .loading { display: flex; gap: 5px; justify-content: center; padding: 48px 0; }
+  .loading span { width: 7px; height: 7px; border-radius: 50%; background: #f28324; opacity: 0.4; animation: pulse 1.2s infinite; }
+  .loading span:nth-child(2) { animation-delay: 0.2s; }
+  .loading span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+  /* Day group (today + upcoming) */
+  .day-group { margin-bottom: 24px; }
+  .day-label { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #bbb; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .day-label.today-label { color: #f28324; }
+  .day-label .today-dot { width: 6px; height: 6px; border-radius: 50%; background: #f28324; }
+
+  /* Production card */
+  .prod-card {
+    background: #fff; border: 1px solid #ece9e3; border-radius: 10px;
+    padding: 16px 18px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+    margin-bottom: 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  }
+  .prod-card:hover { border-color: #d4c9b8; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .prod-card-left { flex: 1; min-width: 0; }
+  .prod-card-name { font-size: 18px; font-weight: 500; margin-bottom: 6px; }
+  .prod-card-meta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .prod-card-meta span { font-size: 16px; color: #666; display: flex; align-items: center; gap: 5px; }
+  .prod-time-badge { font-size: 14px; font-weight: 600; padding: 4px 12px; border-radius: 20px; flex-shrink: 0; align-self: flex-start; }
+  .prod-time-badge.tbd { background: #fff3e0; color: #c65a00; }
+  .prod-time-badge.set { background: #e8f5e9; color: #1b5e20; }
+  .empty-day { font-size: 16px; color: #ccc; padding: 12px 0; font-style: italic; }
+
+  /* Week view */
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .week-day { background: #fff; border: 1px solid #ece9e3; border-radius: 10px; min-height: 120px; padding: 10px; }
+  .week-day.today { border-color: #f28324; box-shadow: 0 0 0 1px #f28324; }
+  .week-day-label { font-size: 14px; font-weight: 600; color: #bbb; margin-bottom: 6px; text-align: center; }
+  .week-day.today .week-day-label { color: #f28324; }
+  .week-day-num { font-size: 18px; font-weight: 500; text-align: center; margin-bottom: 8px; }
+  .week-prod { background: #fff3e0; border-radius: 6px; padding: 5px 8px; font-size: 14px; font-weight: 500; color: #c65a00; margin-bottom: 4px; cursor: pointer; transition: background 0.15s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .week-prod:hover { background: #ffe0b2; }
+  .week-prod.tbd { background: #fce4ec; color: #880e4f; }
+  .week-prod.set { background: #e8f5e9; color: #1b5e20; }
+
+  /* Month view */
+  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .month-day-header { font-size: 14px; font-weight: 600; color: #bbb; text-align: center; padding: 6px 0; }
+  .month-day { background: #fff; border: 1px solid #ece9e3; border-radius: 8px; min-height: 90px; padding: 8px; }
+  .month-day.today { border-color: #f28324; }
+  .month-day.other-month { background: #f9f8f6; opacity: 0.5; }
+  .month-day-num { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .month-day.today .month-day-num { color: #f28324; }
+  .month-prod { background: #fff3e0; border-radius: 4px; padding: 2px 6px; font-size: 14px; color: #c65a00; margin-bottom: 3px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .month-prod:hover { background: #ffe0b2; }
+  .month-more { font-size: 14px; color: #bbb; margin-top: 2px; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 780px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
+  .modal-header { padding: 20px 24px 0; border-bottom: 1px solid #ece9e3; }
+  .modal-title { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+  .modal-meta { font-size: 16px; color: #999; margin-bottom: 14px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .modal-tabs { display: flex; gap: 0; }
+  .modal-tab { padding: 12px 18px; font-size: 16px; font-weight: 500; color: #999; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; font-family: inherit; }
+  .modal-tab.active { color: #f28324; border-bottom-color: #f28324; }
+  .modal-tab.restricted { display: none; }
+  .modal-tab.restricted.visible { display: block; }
+  .modal-body { padding: 0; }
+  .modal-content { display: none; }
+  .modal-content.active { display: block; }
+  .modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: #999; padding: 4px 8px; margin-top: -4px; }
+  .modal-close:hover { color: #1a1a1a; }
+
+  .modal-iframe { width: 100%; height: 560px; border: none; display: block; }
+  .notion-frame { width: 100%; height: 700px; border: none; display: block; }
+
+  .edit-wrapper { padding: 0; }
+  .edit-frame { width: 100%; height: 700px; border: none; display: block; }
+
+  .state-msg { text-align: center; padding: 48px 24px; color: #bbb; font-size: 16px; }
+  .state-msg strong { display: block; color: #888; margin-bottom: 4px; font-size: 18px; }
+
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 16px; font-weight: 500; transition: transform 0.25s ease; z-index: 300; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 640px) {
+    .week-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .week-day { min-height: 80px; padding: 6px; }
+    .month-day { min-height: 60px; padding: 4px; }
+    .modal { border-radius: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cal-header">
+    <div class="cal-title">Production Schedule</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <button class="add-btn" id="addBtn" onclick="openAddModal()">+ Add Production</button>
+      <div class="cal-nav">
+        <button class="nav-btn" onclick="navigate(-1)">‹</button>
+        <div class="nav-label" id="navLabel">—</div>
+        <button class="nav-btn" onclick="navigate(1)">›</button>
+        <button class="nav-btn" onclick="goToday()" style="font-size:14px;padding:8px 12px;">Today</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" id="vt-today" onclick="setView('today')">Today</button>
+    <button class="view-tab" id="vt-upcoming" onclick="setView('upcoming')">Upcoming</button>
+    <button class="view-tab" id="vt-week" onclick="setView('week')">Week</button>
+    <button class="view-tab" id="vt-month" onclick="setView('month')">Month</button>
+  </div>
+
+  <div id="calBody">
+    <div class="loading"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title" id="modalTitle">—</div>
+      <div class="modal-meta" id="modalMeta"></div>
+      <div class="modal-tabs">
+        <button class="modal-tab active" id="mt-dispatch" onclick="switchModalTab('dispatch')">Dispatch</button>
+        <button class="modal-tab restricted" id="mt-edit" onclick="switchModalTab('edit')">Edit Production</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content active" id="mc-dispatch">
+        <iframe class="modal-iframe" id="dispatchFrame" src="about:blank"></iframe>
+      </div>
+      <div class="modal-content" id="mc-edit">
+        <iframe class="edit-frame" id="editFrame" src="about:blank"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Production Modal -->
+<div class="modal-overlay" id="addModalOverlay" onclick="closeAddModalOnBg(event)">
+  <div class="modal" id="addModal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+      <div class="modal-title">Add Production</div>
+      <div class="modal-tabs">
+        <button class="modal-tab active">New Production</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <iframe class="notion-frame" id="addFrame" src="about:blank"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const WORKER   = 'https://joalku-production-editer.dholmes127.workers.dev';
+  const PROD_DB  = 'ec892733827e8384a0e10137c50c9d16';
+  const DISPATCH_BASE = 'https://dholmes127.github.io/dispatch-board/?id=';
+  const EDIT_BASE     = 'https://dholmes127.github.io/joalku-production-tool/joalku-schedule.html';
+  const NOTION_FORM   = 'https://www.notion.so/dholmes127/38e92733827e806b807cea3ae7a1b6a1'; // update with your form URL
+
+  // Users allowed to edit/add productions
+  const CALENDAR_ADMIN_USERS = []; // add WordPress usernames here when accounts are created
+
+  const wpUser = (typeof window.scbCurrentUser !== 'undefined' && window.scbCurrentUser?.login)
+    ? window.scbCurrentUser.login.toLowerCase() : null;
+  const isAdmin = wpUser && CALENDAR_ADMIN_USERS.includes(wpUser);
+
+  // Show add button if admin
+  if (isAdmin) document.getElementById('addBtn').classList.add('visible');
+
+  let allProductions = [];
+  let currentView = 'today';
+  let currentDate = new Date();
+  currentDate.setHours(0,0,0,0);
+
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  window.onload = load;
+
+  async function load() {
+    try {
+      const data = await queryDB([{property:'Date of Supply',direction:'ascending'}]);
+      allProductions = data.results;
+      render();
+    } catch(e) {
+      document.getElementById('calBody').innerHTML = `<div class="state-msg"><strong>Could not connect</strong>${e.message}</div>`;
+    }
+  }
+
+  async function queryDB(sorts) {
+    const body = { page_size: 100, sorts };
+    const r = await fetch(`${WORKER}/v1/databases/${PROD_DB}/query`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message||'API error'); }
+    return r.json();
+  }
+
+  function getProp(page, name, type='rich_text') {
+    const p = page.properties[name];
+    if (!p) return '—';
+    if (type==='title')     return p.title?.[0]?.plain_text||'—';
+    if (type==='rich_text') return p.rich_text?.[0]?.plain_text||'—';
+    if (type==='date')      return p.date?.start||'—';
+    if (type==='select')    return p.select?.name||'—';
+    return '—';
+  }
+
+  function getProdsForDate(dateStr) {
+    return allProductions.filter(p => getProp(p,'Date of Supply','date') === dateStr);
+  }
+
+  function dateStr(d) { return d.toISOString().slice(0,10); }
+
+  function fmtDayLabel(d) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diff = Math.round((d - today) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    return d.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'});
+  }
+
+  function fmtShortDate(d) {
+    return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  }
+
+  function prodCard(p) {
+    const id       = p.id;
+    const name     = getProp(p,'Production Name','title');
+    const client   = getProp(p,'Client Name');
+    const time     = getProp(p,'Time of Concrete at Site');
+    const location = getProp(p,'Location');
+    const isTbd    = time==='TBD'||time==='—';
+    return `<div class="prod-card" onclick="openProduction('${id}')">
+      <div class="prod-card-left">
+        <div class="prod-card-name">${name}</div>
+        <div class="prod-card-meta">
+          ${client!=='—'?`<span>👤 ${client}</span>`:''}
+          ${location!=='—'?`<span>📍 ${location}</span>`:''}
+        </div>
+      </div>
+      <div class="prod-time-badge ${isTbd?'tbd':'set'}">${isTbd?'TBD':time}</div>
+    </div>`;
+  }
+
+  // ── VIEWS ──────────────────────────────────────────────────────────────────
+
+  function renderToday() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const ds = dateStr(today);
+    const prods = getProdsForDate(ds);
+    document.getElementById('navLabel').textContent = today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    const cal = document.getElementById('calBody');
+    cal.innerHTML = prods.length
+      ? prods.map(p => prodCard(p)).join('')
+      : '<div class="state-msg"><strong>No productions today</strong></div>';
+  }
+
+  function renderUpcoming() {
+    const cal = document.getElementById('calBody');
+    cal.innerHTML = '';
+    const today = new Date(); today.setHours(0,0,0,0);
+    document.getElementById('navLabel').textContent = 'Next 3 days';
+
+    for (let i = 0; i < 4; i++) {
+      const d = new Date(today); d.setDate(today.getDate() + i);
+      const ds = dateStr(d);
+      const prods = getProdsForDate(ds);
+      const isToday = i === 0;
+
+      const group = document.createElement('div');
+      group.className = 'day-group';
+      const label = document.createElement('div');
+      label.className = 'day-label' + (isToday?' today-label':'');
+      label.innerHTML = isToday ? `<span class="today-dot"></span> TODAY — ${fmtShortDate(d)}` : fmtDayLabel(d).toUpperCase();
+      group.appendChild(label);
+
+      if (prods.length) {
+        group.innerHTML += prods.map(p => prodCard(p)).join('');
+      } else {
+        group.innerHTML += `<div class="empty-day">No productions</div>`;
+      }
+      cal.appendChild(group);
+    }
+  }
+
+  function renderWeek() {
+    const cal = document.getElementById('calBody');
+    // Find start of week (Monday)
+    const d = new Date(currentDate);
+    const day = d.getDay();
+    const monday = new Date(d); monday.setDate(d.getDate() - (day===0?6:day-1));
+    document.getElementById('navLabel').textContent =
+      `${fmtShortDate(monday)} – ${fmtShortDate(new Date(monday.getTime()+6*86400000))}`;
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    let html = '<div class="week-grid">';
+    for (let i = 0; i < 7; i++) {
+      const wd = new Date(monday); wd.setDate(monday.getDate()+i);
+      const ds = dateStr(wd);
+      const isToday = ds === dateStr(today);
+      const prods = getProdsForDate(ds);
+      html += `<div class="week-day ${isToday?'today':''}">
+        <div class="week-day-label">${DAYS[wd.getDay()]}</div>
+        <div class="week-day-num">${wd.getDate()}</div>
+        ${prods.map(p => {
+          const time = getProp(p,'Time of Concrete at Site');
+          const isTbd = time==='TBD'||time==='—';
+          const name = getProp(p,'Production Name','title');
+          return `<div class="week-prod ${isTbd?'tbd':'set'}" onclick="openProduction('${p.id}')" title="${name}">${name}</div>`;
+        }).join('')}
+      </div>`;
+    }
+    html += '</div>';
+    cal.innerHTML = html;
+  }
+
+  function renderMonth() {
+    const cal = document.getElementById('calBody');
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    document.getElementById('navLabel').textContent = `${MONTHS[month]} ${year}`;
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const firstDay = new Date(year, month, 1);
+    const lastDay  = new Date(year, month+1, 0);
+    const startDow = firstDay.getDay();
+    const startOffset = startDow === 0 ? 6 : startDow - 1; // Monday start
+
+    let html = '<div class="month-grid">';
+    DAYS.slice(1).concat(DAYS[0]).forEach(d => { html += `<div class="month-day-header">${d}</div>`; });
+
+    // Previous month padding
+    for (let i = 0; i < startOffset; i++) {
+      const pd = new Date(year, month, -startOffset+i+1);
+      html += `<div class="month-day other-month"><div class="month-day-num">${pd.getDate()}</div></div>`;
+    }
+
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const wd = new Date(year, month, d);
+      const ds = dateStr(wd);
+      const isToday = ds === dateStr(today);
+      const prods = getProdsForDate(ds);
+      html += `<div class="month-day ${isToday?'today':''}">
+        <div class="month-day-num">${d}</div>
+        ${prods.slice(0,2).map(p => {
+          const name = getProp(p,'Production Name','title');
+          return `<div class="month-prod" onclick="openProduction('${p.id}')" title="${name}">${name}</div>`;
+        }).join('')}
+        ${prods.length > 2 ? `<div class="month-more">+${prods.length-2} more</div>` : ''}
+      </div>`;
+    }
+
+    // Next month padding
+    const totalCells = startOffset + lastDay.getDate();
+    const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= remaining; i++) {
+      html += `<div class="month-day other-month"><div class="month-day-num">${i}</div></div>`;
+    }
+
+    html += '</div>';
+    cal.innerHTML = html;
+  }
+
+  function render() {
+    if (currentView==='today')    renderToday();
+    else if (currentView==='upcoming') renderUpcoming();
+    else if (currentView==='week')  renderWeek();
+    else if (currentView==='month') renderMonth();
+  }
+
+  function setView(v) {
+    currentView = v;
+    ['today','upcoming','week','month'].forEach(x => document.getElementById('vt-'+x).classList.toggle('active', x===v));
+    currentDate = new Date(); currentDate.setHours(0,0,0,0);
+    render();
+  }
+
+  function navigate(dir) {
+    if (currentView==='today') {
+      currentDate.setDate(currentDate.getDate()+dir);
+      const cal = document.getElementById('calBody');
+      const ds = dateStr(currentDate);
+      const prods = getProdsForDate(ds);
+      const today = new Date(); today.setHours(0,0,0,0);
+      document.getElementById('navLabel').textContent = currentDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+      cal.innerHTML = prods.length
+        ? prods.map(p => prodCard(p)).join('')
+        : '<div class="state-msg"><strong>No productions</strong></div>';
+    } else if (currentView==='upcoming') {
+      // no nav for upcoming
+    } else if (currentView==='week') {
+      currentDate.setDate(currentDate.getDate() + dir*7);
+      render();
+    } else if (currentView==='month') {
+      currentDate.setMonth(currentDate.getMonth() + dir);
+      render();
+    }
+  }
+
+  function goToday() {
+    currentDate = new Date(); currentDate.setHours(0,0,0,0);
+    render();
+  }
+
+  // ── MODAL ─────────────────────────────────────────────────────────────────
+  function openProduction(pageId) {
+    // Find production
+    const p = allProductions.find(x => x.id === pageId);
+    if (!p) return;
+
+    const name     = getProp(p,'Production Name','title');
+    const client   = getProp(p,'Client Name');
+    const time     = getProp(p,'Time of Concrete at Site');
+    const location = getProp(p,'Location');
+    const date     = getProp(p,'Date of Supply','date');
+
+    document.getElementById('modalTitle').textContent = name;
+    const metaParts = [];
+    if (date!=='—') metaParts.push(new Date(date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'long',year:'numeric'}));
+    if (client!=='—') metaParts.push('👤 '+client);
+    if (time!=='—') metaParts.push('🕐 '+time);
+    if (location!=='—') metaParts.push('📍 '+location);
+    document.getElementById('modalMeta').innerHTML = metaParts.map(m=>`<span>${m}</span>`).join('');
+
+    // Set dispatch iframe
+    const cleanId = pageId.replace(/-/g,'');
+    document.getElementById('dispatchFrame').src = DISPATCH_BASE + cleanId;
+
+    // Show/hide edit tab for admins
+    const editTab = document.getElementById('mt-edit');
+    if (isAdmin) {
+      editTab.classList.add('visible');
+      document.getElementById('editFrame').src = EDIT_BASE;
+    } else {
+      editTab.classList.remove('visible');
+    }
+
+    // Reset to dispatch tab
+    switchModalTab('dispatch');
+    document.getElementById('modalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.getElementById('dispatchFrame').src = 'about:blank';
+    document.getElementById('editFrame').src = 'about:blank';
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOnBg(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+  function switchModalTab(tab) {
+    ['dispatch','edit'].forEach(t => {
+      document.getElementById('mt-'+t)?.classList.toggle('active', t===tab);
+      document.getElementById('mc-'+t)?.classList.toggle('active', t===tab);
+    });
+  }
+
+  // ── ADD PRODUCTION MODAL ──────────────────────────────────────────────────
+  function openAddModal() {
+    if (!isAdmin) return;
+    document.getElementById('addFrame').src = NOTION_FORM;
+    document.getElementById('addModalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeAddModal() {
+    document.getElementById('addModalOverlay').classList.remove('open');
+    document.getElementById('addFrame').src = 'about:blank';
+    document.body.style.overflow = '';
+  }
+
+  function closeAddModalOnBg(e) { if (e.target === document.getElementById('addModalOverlay')) closeAddModal(); }
+
+  function toast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent=msg; t.className='toast show '+type;
+    setTimeout(()=>t.className='toast',3000);
+  }
+</script>
+</body>
+</html>

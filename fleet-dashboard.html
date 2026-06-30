@@ -228,10 +228,16 @@
   // WordPress usernames allowed to see total repair cost and individual repair costs
   const FINANCE_USERS = ['kmadziwa', 'alice_madziwa', 'pius', 'pius.joalku']; // Kundai, Alice Madziwa, Pius
 
-  // Check WordPress current user
-  const wpUser = (typeof window.scbCurrentUser !== 'undefined' && window.scbCurrentUser?.login)
-    ? window.scbCurrentUser.login.toLowerCase()
-    : null;
+  // Check WordPress current user — passed via ?login=... in the iframe URL
+  // since this page is iframed from a different domain (GitHub Pages) and
+  // can't read window.scbCurrentUser directly (cross-origin).
+  const urlParams = new URLSearchParams(window.location.search);
+  const loginFromUrl = urlParams.get('login');
+  const wpUser = loginFromUrl
+    ? loginFromUrl.toLowerCase()
+    : (typeof window.scbCurrentUser !== 'undefined' && window.scbCurrentUser?.login)
+      ? window.scbCurrentUser.login.toLowerCase()
+      : null;
   const canLogRepair = wpUser && REPAIR_USERS.includes(wpUser);
   const canViewCosts = wpUser && FINANCE_USERS.includes(wpUser);
 

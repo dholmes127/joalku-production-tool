@@ -220,6 +220,25 @@
     try {
       const data = await query(null, [{ property: 'Date of Supply', direction: 'ascending' }]);
       allPages = data.results;
+
+      const params = new URLSearchParams(window.location.search);
+      const targetId = (params.get('id') || '').replace(/-/g, '');
+
+      if (targetId) {
+        // Single-production mode: only show this one, hide search, auto-expand
+        const match = allPages.find(p => p.id.replace(/-/g, '') === targetId);
+        document.getElementById('searchInput').closest('.search-wrap').style.display = 'none';
+        if (match) {
+          openId = match.id;
+          document.getElementById('pageSub').textContent = 'Editing this production';
+          render([match]);
+        } else {
+          document.getElementById('pageSub').textContent = '';
+          document.getElementById('list').innerHTML = '<div class="state-msg"><strong>Production not found</strong></div>';
+        }
+        return;
+      }
+
       const tbd = allPages.filter(p => getT(p,'Time of Concrete at Site') === 'TBD').length;
       document.getElementById('pageSub').textContent = tbd > 0
         ? `${tbd} production${tbd>1?'s':''} with time TBD`

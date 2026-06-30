@@ -189,7 +189,70 @@
       </div>
     </div>
     <div class="modal-body">
-      <iframe class="notion-frame" id="addFrame" src="about:blank"></iframe>
+      <form id="addProductionForm" style="padding:20px; display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Production Name *</label>
+          <input type="text" id="apName" required style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
+        </div>
+        <div>
+          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Project Name</label>
+          <input type="text" id="apProject" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;">
+            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Volume (m³)</label>
+            <input type="number" step="0.01" id="apVolume" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Mode of Discharge</label>
+            <select id="apMode" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;">
+              <option value="">—</option>
+              <option value="Manual">Manual</option>
+              <option value="Pump">Pump</option>
+              <option value="TBD">TBD</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;">
+            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Date of Supply</label>
+            <input type="date" id="apDate" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Time of Concrete at Site</label>
+            <input type="text" id="apTime" placeholder="e.g. 9:00 AM or TBD" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
+          </div>
+        </div>
+        <div>
+          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Client Name</label>
+          <input type="text" id="apClient" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
+        </div>
+        <div>
+          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Location</label>
+          <input type="text" id="apLocation" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
+        </div>
+        <div>
+          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Cast Elements</label>
+          <input type="text" id="apCast" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;">
+            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Class of Concrete</label>
+            <input type="text" id="apClass" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Status</label>
+            <select id="apStatus" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;">
+              <option value="Scheduled">Scheduled</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div id="apError" style="color:#d9534f;font-size:14px;display:none;"></div>
+        <button type="submit" id="apSubmitBtn" style="background:#f28324;color:#fff;border:none;padding:11px;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;">Create Production</button>
+      </form>
     </div>
   </div>
 </div>
@@ -437,18 +500,92 @@
   // ── ADD PRODUCTION MODAL ──────────────────────────────────────────────────
   function openAddModal() {
     if (!canEditProduction) return;
-    document.getElementById('addFrame').src = NOTION_FORM;
+    document.getElementById('addProductionForm').reset();
+    document.getElementById('apError').style.display = 'none';
     document.getElementById('addModalOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
 
   function closeAddModal() {
     document.getElementById('addModalOverlay').classList.remove('open');
-    document.getElementById('addFrame').src = 'about:blank';
     document.body.style.overflow = '';
   }
 
   function closeAddModalOnBg(e) { if (e.target === document.getElementById('addModalOverlay')) closeAddModal(); }
+
+  document.getElementById('addProductionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!canEditProduction) return;
+
+    const errEl = document.getElementById('apError');
+    errEl.style.display = 'none';
+
+    const name = document.getElementById('apName').value.trim();
+    if (!name) {
+      errEl.textContent = 'Production Name is required.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const properties = {
+      'Production Name': { title: [{ text: { content: name } }] }
+    };
+    const project = document.getElementById('apProject').value.trim();
+    if (project) properties['Project Name'] = { rich_text: [{ text: { content: project } }] };
+
+    const volume = document.getElementById('apVolume').value;
+    if (volume !== '') properties['Volume (m³)'] = { number: Number(volume) };
+
+    const mode = document.getElementById('apMode').value;
+    if (mode) properties['Mode of Discharge'] = { select: { name: mode } };
+
+    const timeVal = document.getElementById('apTime').value.trim();
+    if (timeVal) properties['Time of Concrete at Site'] = { rich_text: [{ text: { content: timeVal } }] };
+
+    const client = document.getElementById('apClient').value.trim();
+    if (client) properties['Client Name'] = { rich_text: [{ text: { content: client } }] };
+
+    const location = document.getElementById('apLocation').value.trim();
+    if (location) properties['Location'] = { rich_text: [{ text: { content: location } }] };
+
+    const dateVal = document.getElementById('apDate').value;
+    if (dateVal) properties['Date of Supply'] = { date: { start: dateVal } };
+
+    const cast = document.getElementById('apCast').value.trim();
+    if (cast) properties['Cast Elements'] = { rich_text: [{ text: { content: cast } }] };
+
+    const classOf = document.getElementById('apClass').value.trim();
+    if (classOf) properties['Class of Concrete'] = { rich_text: [{ text: { content: classOf } }] };
+
+    properties['Status'] = { select: { name: document.getElementById('apStatus').value } };
+
+    const btn = document.getElementById('apSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+
+    try {
+      const r = await fetch(`${WORKER}/v1/pages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parent: { database_id: PROD_DB },
+          properties
+        })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.message || 'Failed to create production');
+
+      closeAddModal();
+      toast('Production created');
+      await load(); // refresh calendar data
+    } catch (err) {
+      errEl.textContent = 'Could not create production: ' + err.message;
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Production';
+    }
+  });
 
   function toast(msg, type='') {
     const t = document.getElementById('toast');

@@ -360,7 +360,14 @@
   let canAssign = false;
 
   function getCurrentUser() {
-    // window.scbCurrentUser is injected by the existing SCB header/footer snippet.
+    // The embedding WordPress page passes the logged-in user's login via
+    // ?login=... since this page is iframed from a different domain and
+    // can't read window.scbCurrentUser directly (cross-origin).
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = params.get('login');
+    if (fromUrl) return fromUrl;
+
+    // Fallback in case this is ever loaded same-origin / inside SCB directly.
     if (window.scbCurrentUser && window.scbCurrentUser.login) {
       return window.scbCurrentUser.login;
     }

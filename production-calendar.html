@@ -139,11 +139,15 @@
     </div>
   </div>
 
-  <div class="view-tabs">
-    <button class="view-tab active" id="vt-today" onclick="setView('today')">Today</button>
-    <button class="view-tab" id="vt-upcoming" onclick="setView('upcoming')">Upcoming</button>
-    <button class="view-tab" id="vt-week" onclick="setView('week')">Week</button>
-    <button class="view-tab" id="vt-month" onclick="setView('month')">Month</button>
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+    <div class="view-tabs" style="margin-bottom:0;">
+      <button class="view-tab active" id="vt-today" onclick="setView('today')">Today</button>
+      <button class="view-tab" id="vt-upcoming" onclick="setView('upcoming')">Upcoming</button>
+    </div>
+    <div style="position:relative; flex:1; min-width:200px;">
+      <input type="text" id="searchInput" placeholder="Search by name or client…" oninput="onSearch()"
+        style="width:100%; padding:9px 12px; border:1px solid #e0ddd8; border-radius:8px; font-size:16px; font-family:inherit; outline:none;" />
+    </div>
   </div>
 
   <div id="calBody">
@@ -200,10 +204,18 @@
   const NOTION_FORM   = 'https://www.notion.so/dholmes127/38e92733827e806b807cea3ae7a1b6a1'; // update with your form URL
 
   // Users allowed to edit/add productions
-  const CALENDAR_ADMIN_USERS = []; // add WordPress usernames here when accounts are created
+  const CALENDAR_ADMIN_USERS = ['daniel_amegah'];
 
-  const wpUser = (typeof window.scbCurrentUser !== 'undefined' && window.scbCurrentUser?.login)
-    ? window.scbCurrentUser.login.toLowerCase() : null;
+  // Check WordPress current user — passed via ?login=... in the iframe URL
+  // since this page is iframed from a different domain (GitHub Pages) and
+  // can't read window.scbCurrentUser directly (cross-origin).
+  const urlParams = new URLSearchParams(window.location.search);
+  const loginFromUrl = urlParams.get('login');
+  const wpUser = loginFromUrl
+    ? loginFromUrl.toLowerCase()
+    : (typeof window.scbCurrentUser !== 'undefined' && window.scbCurrentUser?.login)
+      ? window.scbCurrentUser.login.toLowerCase()
+      : null;
   const isAdmin = wpUser && CALENDAR_ADMIN_USERS.includes(wpUser);
 
   // Show add button if admin
@@ -249,8 +261,18 @@
   }
 
   function getProdsForDate(dateStr) {
-    return allProductions.filter(p => getProp(p,'Date of Supply','date') === dateStr);
+    const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+    let prods = allProductions.filter(p => getProp(p,'Date of Supply','date') === dateStr);
+    if (q) {
+      prods = prods.filter(p =>
+        getProp(p,'Production Name','title').toLowerCase().includes(q) ||
+        getProp(p,'Client Name').toLowerCase().includes(q)
+      );
+    }
+    return prods;
   }
+
+  function onSearch() { render(); }
 
   function dateStr(d) { return d.toISOString().slice(0,10); }
 
@@ -326,94 +348,14 @@
     }
   }
 
-  function renderWeek() {
-    const cal = document.getElementById('calBody');
-    // Find start of week (Monday)
-    const d = new Date(currentDate);
-    const day = d.getDay();
-    const monday = new Date(d); monday.setDate(d.getDate() - (day===0?6:day-1));
-    document.getElementById('navLabel').textContent =
-      `${fmtShortDate(monday)} – ${fmtShortDate(new Date(monday.getTime()+6*86400000))}`;
-
-    const today = new Date(); today.setHours(0,0,0,0);
-    let html = '<div class="week-grid">';
-    for (let i = 0; i < 7; i++) {
-      const wd = new Date(monday); wd.setDate(monday.getDate()+i);
-      const ds = dateStr(wd);
-      const isToday = ds === dateStr(today);
-      const prods = getProdsForDate(ds);
-      html += `<div class="week-day ${isToday?'today':''}">
-        <div class="week-day-label">${DAYS[wd.getDay()]}</div>
-        <div class="week-day-num">${wd.getDate()}</div>
-        ${prods.map(p => {
-          const time = getProp(p,'Time of Concrete at Site');
-          const isTbd = time==='TBD'||time==='—';
-          const name = getProp(p,'Production Name','title');
-          return `<div class="week-prod ${isTbd?'tbd':'set'}" onclick="openProduction('${p.id}')" title="${name}">${name}</div>`;
-        }).join('')}
-      </div>`;
-    }
-    html += '</div>';
-    cal.innerHTML = html;
-  }
-
-  function renderMonth() {
-    const cal = document.getElementById('calBody');
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    document.getElementById('navLabel').textContent = `${MONTHS[month]} ${year}`;
-
-    const today = new Date(); today.setHours(0,0,0,0);
-    const firstDay = new Date(year, month, 1);
-    const lastDay  = new Date(year, month+1, 0);
-    const startDow = firstDay.getDay();
-    const startOffset = startDow === 0 ? 6 : startDow - 1; // Monday start
-
-    let html = '<div class="month-grid">';
-    DAYS.slice(1).concat(DAYS[0]).forEach(d => { html += `<div class="month-day-header">${d}</div>`; });
-
-    // Previous month padding
-    for (let i = 0; i < startOffset; i++) {
-      const pd = new Date(year, month, -startOffset+i+1);
-      html += `<div class="month-day other-month"><div class="month-day-num">${pd.getDate()}</div></div>`;
-    }
-
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      const wd = new Date(year, month, d);
-      const ds = dateStr(wd);
-      const isToday = ds === dateStr(today);
-      const prods = getProdsForDate(ds);
-      html += `<div class="month-day ${isToday?'today':''}">
-        <div class="month-day-num">${d}</div>
-        ${prods.slice(0,2).map(p => {
-          const name = getProp(p,'Production Name','title');
-          return `<div class="month-prod" onclick="openProduction('${p.id}')" title="${name}">${name}</div>`;
-        }).join('')}
-        ${prods.length > 2 ? `<div class="month-more">+${prods.length-2} more</div>` : ''}
-      </div>`;
-    }
-
-    // Next month padding
-    const totalCells = startOffset + lastDay.getDate();
-    const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-    for (let i = 1; i <= remaining; i++) {
-      html += `<div class="month-day other-month"><div class="month-day-num">${i}</div></div>`;
-    }
-
-    html += '</div>';
-    cal.innerHTML = html;
-  }
-
   function render() {
     if (currentView==='today')    renderToday();
-    else if (currentView==='upcoming') renderUpcoming();
-    else if (currentView==='week')  renderWeek();
-    else if (currentView==='month') renderMonth();
+    else renderUpcoming();
   }
 
   function setView(v) {
     currentView = v;
-    ['today','upcoming','week','month'].forEach(x => document.getElementById('vt-'+x).classList.toggle('active', x===v));
+    ['today','upcoming'].forEach(x => document.getElementById('vt-'+x).classList.toggle('active', x===v));
     currentDate = new Date(); currentDate.setHours(0,0,0,0);
     render();
   }
@@ -424,20 +366,12 @@
       const cal = document.getElementById('calBody');
       const ds = dateStr(currentDate);
       const prods = getProdsForDate(ds);
-      const today = new Date(); today.setHours(0,0,0,0);
       document.getElementById('navLabel').textContent = currentDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
       cal.innerHTML = prods.length
         ? prods.map(p => prodCard(p)).join('')
         : '<div class="state-msg"><strong>No productions</strong></div>';
-    } else if (currentView==='upcoming') {
-      // no nav for upcoming
-    } else if (currentView==='week') {
-      currentDate.setDate(currentDate.getDate() + dir*7);
-      render();
-    } else if (currentView==='month') {
-      currentDate.setMonth(currentDate.getMonth() + dir);
-      render();
     }
+    // no nav for upcoming
   }
 
   function goToday() {

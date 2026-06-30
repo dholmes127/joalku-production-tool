@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tasks — Joalku</title>
+<style>
+  :root {
+    --orange: #E8740C;
+    --orange-dark: #C45F08;
+    --bg: #F4F5F7;
+    --card: #FFFFFF;
+    --border: #E2E4E8;
+    --text: #1F2329;
+    --text-muted: #6B7280;
+    --gray-col: #9CA3AF;
+    --yellow-col: #D9A441;
+    --green-col: #3FA66A;
+    --red-col: #D9534F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .topbar h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .view-toggle {
+    display: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .view-toggle button {
+    border: none;
+    background: transparent;
+    padding: 7px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+  }
+
+  .view-toggle button.active {
+    background: var(--orange);
+    color: #fff;
+  }
+
+  .btn-primary {
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover { background: var(--orange-dark); }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(240px, 1fr));
+    gap: 16px;
+    padding: 20px 24px;
+    overflow-x: auto;
+  }
+
+  .column {
+    background: #ECEDF0;
+    border-radius: 10px;
+    padding: 12px;
+    min-height: 200px;
+  }
+
+  .column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px 12px;
+  }
+
+  .column-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-not-started { background: var(--gray-col); }
+  .dot-in-progress { background: var(--yellow-col); }
+  .dot-done { background: var(--green-col); }
+  .dot-cancelled { background: var(--red-col); }
+
+  .count-badge {
+    background: var(--card);
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    color: var(--text-muted);
+  }
+
+  .task-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .task-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+
+  .task-meta {
+    font-size: 14px;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .task-notes {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .priority-pill {
+    font-size: 14px;
+    border-radius: 12px;
+    padding: 2px 9px;
+    font-weight: 600;
+  }
+  .priority-Low { background: #E5F4EC; color: var(--green-col); }
+  .priority-Medium { background: #FBF1DC; color: var(--yellow-col); }
+  .priority-High { background: #FBE7E6; color: var(--red-col); }
+
+  .status-select {
+    width: 100%;
+    font-size: 14px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .empty-col {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 20px 6px;
+  }
+
+  /* Modal */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 16px;
+  }
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 440px;
+    padding: 24px;
+  }
+
+  .modal h2 {
+    font-size: 18px;
+    margin: 0 0 16px;
+  }
+
+  .field { margin-bottom: 14px; }
+
+  .field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .field input, .field select, .field textarea {
+    width: 100%;
+    font-size: 14px;
+    padding: 9px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-family: inherit;
+  }
+
+  .field textarea { resize: vertical; min-height: 60px; }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .btn-secondary {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .loading, .error-msg {
+    padding: 20px 24px;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .error-msg { color: var(--red-col); }
+
+  @media (max-width: 900px) {
+    .board { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .board { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Tasks</h1>
+  <div class="toolbar">
+    <div class="view-toggle" id="viewToggle">
+      <button id="btnOwn" class="active">My Tasks</button>
+      <button id="btnTeam">My Team</button>
+    </div>
+    <button class="btn-primary" id="newTaskBtn">+ New Task</button>
+  </div>
+</div>
+
+<div id="status" class="loading">Loading tasks…</div>
+<div class="board" id="board" style="display:none;"></div>
+
+<!-- New Task Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>New Task</h2>
+    <div class="field">
+      <label for="taskName">Task Name</label>
+      <input type="text" id="taskName" placeholder="e.g. Restock welding rods" />
+    </div>
+    <div class="field" id="assigneeField" style="display:none;">
+      <label for="assigneeSelect">Assign To</label>
+      <select id="assigneeSelect"></select>
+    </div>
+    <div class="field">
+      <label for="priority">Priority</label>
+      <select id="priority">
+        <option value="">None</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="dueDate">Due Date</label>
+      <input type="date" id="dueDate" />
+    </div>
+    <div class="field">
+      <label for="notes">Notes</label>
+      <textarea id="notes" placeholder="Optional details…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelBtn">Cancel</button>
+      <button class="btn-primary" id="saveTaskBtn">Create Task</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- Configuration ----
+  const WORKER_URL = 'https://joalku-tasks.dholmes127.workers.dev';
+
+  // Mirror of the Worker's TASK_ASSIGNERS / employee list — used to populate
+  // the "Assign To" dropdown for managers. Keep this in sync with the Worker.
+  const TASK_ASSIGNERS = {
+    'daniel_amegah': 'Daniel Amegah',
+    'ruvarashe_matare': 'Ruvarashe Effie Matare'
+    // add pius / bernice / kundai once usernames are confirmed
+  };
+
+  const ALL_EMPLOYEES = [
+    'Bernice Anima Asamoa-Frimpong','Esther Nunana Ami Tunnu','Nana Yaa Sarpomaa',
+    'Joseph Aidoo','Mavis Lamptey','Joseph Annan','Daniel Amegah','Mohammed Sherrif',
+    'Edward Aidoo','Jacob Larbie','Jude Agyeman Badu','Nartey Yawson','Larbie Dickson',
+    'Emmanuel Yevu','Patrick Owusu','Martey Maama Emmanuel','Abordo Ablorh Vincent',
+    'Isaac Aidoo','Boafo Emmanuel','Enoch Adjei','Kundai Madziwa','Pius','David Abane',
+    'Henry MacCarthy Ofotsu','Kojo Avou','Christian Enstiwah','Kwaku Darko',
+    'Abdulai Sulley','Ruvarashe Effie Matare','Joyce Effah Dankyi','Sophia Quansah','Vida Nanor'
+  ];
+
+  const STATUSES = ['Not Started', 'In Progress', 'Done', 'Cancelled'];
+  const STATUS_DOT_CLASS = {
+    'Not Started': 'dot-not-started',
+    'In Progress': 'dot-in-progress',
+    'Done': 'dot-done',
+    'Cancelled': 'dot-cancelled'
+  };
+
+  let currentViewMode = 'own';
+  let userLogin = null;
+  let employeeName = null;
+  let canAssign = false;
+
+  function getCurrentUser() {
+    // window.scbCurrentUser is injected by the existing SCB header/footer snippet.
+    if (window.scbCurrentUser && window.scbCurrentUser.login) {
+      return window.scbCurrentUser.login;
+    }
+    return null;
+  }
+
+  function init() {
+    userLogin = getCurrentUser();
+    if (!userLogin) {
+      document.getElementById('status').textContent = 'Unable to identify logged-in user. Please refresh or log in again.';
+      document.getElementById('status').className = 'error-msg';
+      return;
+    }
+
+    employeeName = TASK_ASSIGNERS[userLogin] || null;
+    canAssign = Object.prototype.hasOwnProperty.call(TASK_ASSIGNERS, userLogin);
+
+    if (canAssign) {
+      document.getElementById('viewToggle').style.display = 'flex';
+      document.getElementById('assigneeField').style.display = 'block';
+      populateAssigneeDropdown();
+    }
+
+    document.getElementById('btnOwn').addEventListener('click', () => switchView('own'));
+    document.getElementById('btnTeam').addEventListener('click', () => switchView('team'));
+    document.getElementById('newTaskBtn').addEventListener('click', openModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('saveTaskBtn').addEventListener('click', createTask);
+
+    loadTasks();
+  }
+
+  function populateAssigneeDropdown() {
+    const sel = document.getElementById('assigneeSelect');
+    sel.innerHTML = '<option value="">Myself</option>' +
+      ALL_EMPLOYEES.map(name => `<option value="${name}">${name}</option>`).join('');
+  }
+
+  function switchView(mode) {
+    currentViewMode = mode;
+    document.getElementById('btnOwn').classList.toggle('active', mode === 'own');
+    document.getElementById('btnTeam').classList.toggle('active', mode === 'team');
+    loadTasks();
+  }
+
+  async function loadTasks() {
+    const statusEl = document.getElementById('status');
+    const boardEl = document.getElementById('board');
+    statusEl.style.display = 'block';
+    statusEl.className = 'loading';
+    statusEl.textContent = 'Loading tasks…';
+    boardEl.style.display = 'none';
+
+    try {
+      const res = await fetch(`${WORKER_URL}/get-tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userLogin, viewMode: currentViewMode })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to load tasks');
+
+      renderBoard(data.results || []);
+      statusEl.style.display = 'none';
+      boardEl.style.display = 'grid';
+    } catch (err) {
+      statusEl.className = 'error-msg';
+      statusEl.textContent = 'Error loading tasks: ' + err.message;
+    }
+  }
+
+  function renderBoard(tasks) {
+    const boardEl = document.getElementById('board');
+    boardEl.innerHTML = '';
+
+    STATUSES.forEach(status => {
+      const col = document.createElement('div');
+      col.className = 'column';
+
+      const colTasks = tasks.filter(t => {
+        const s = t.properties?.Status?.select?.name;
+        return s === status;
+      });
+
+      col.innerHTML = `
+        <div class="column-header">
+          <div class="column-title">
+            <span class="dot ${STATUS_DOT_CLASS[status]}"></span>${status}
+          </div>
+          <span class="count-badge">${colTasks.length}</span>
+        </div>
+      `;
+
+      if (colTasks.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-col';
+        empty.textContent = 'No tasks';
+        col.appendChild(empty);
+      } else {
+        colTasks.forEach(task => col.appendChild(renderCard(task)));
+      }
+
+      boardEl.appendChild(col);
+    });
+  }
+
+  function renderCard(task) {
+    const props = task.properties || {};
+    const name = props['Task Name']?.title?.[0]?.plain_text || '(untitled)';
+    const assignee = props.Assignee?.select?.name || '—';
+    const createdBy = props['Created By']?.select?.name || '—';
+    const priority = props.Priority?.select?.name || '';
+    const due = props['Due Date']?.date?.start || '';
+    const notes = props.Notes?.rich_text?.[0]?.plain_text || '';
+    const status = props.Status?.select?.name || 'Not Started';
+
+    const canEdit = employeeName && (assignee === employeeName || createdBy === employeeName);
+
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.innerHTML = `
+      <p class="task-name">${escapeHtml(name)}</p>
+      <div class="task-meta">
+        <span>👤 ${escapeHtml(assignee)}</span>
+        ${due ? `<span>📅 ${due}</span>` : ''}
+        ${priority ? `<span class="priority-pill priority-${priority}">${priority}</span>` : ''}
+      </div>
+      ${notes ? `<p class="task-notes">${escapeHtml(notes)}</p>` : ''}
+      <select class="status-select" data-page-id="${task.id}" ${canEdit ? '' : 'disabled'}>
+        ${STATUSES.map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+    `;
+
+    const select = card.querySelector('.status-select');
+    select.addEventListener('change', (e) => updateStatus(task.id, e.target.value));
+
+    return card;
+  }
+
+  async function updateStatus(pageId, newStatus) {
+    try {
+      const res = await fetch(`${WORKER_URL}/update-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageId, newStatus, userLogin })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'Failed to update status');
+      loadTasks();
+    } catch (err) {
+      alert('Could not update status: ' + err.message);
+      loadTasks();
+    }
+  }
+
+  function openModal() {
+    document.getElementById('overlay').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('taskName').value = '';
+    document.getElementById('priority').value = '';
+    document.getElementById('dueDate').value = '';
+    document.getElementById('notes').value = '';
+    if (canAssign) document.getElementById('assigneeSelect').value = '';
+  }
+
+  async function createTask() {
+    const taskName = document.getElementById('taskName').value.trim();
+    if (!taskName) { alert('Please enter a task name.'); return; }
+
+    const assignee = canAssign ? document.getElementById('assigneeSelect').value : '';
+    const priority = document.getElementById('priority').value;
+    const dueDate = document.getElementById('dueDate').value;
+    const notes = document.getElementById('notes').value.trim();
+
+    const btn = document.getElementById('saveTaskBtn');
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+
+    try {
+      const res = await fetch(`${WORKER_URL}/create-task`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskName, assignee, priority, dueDate, notes, userLogin })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to create task');
+
+      closeModal();
+      loadTasks();
+    } catch (err) {
+      alert('Could not create task: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Task';
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  init();
+</script>
+</body>
+</html>

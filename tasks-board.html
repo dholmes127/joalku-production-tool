@@ -333,6 +333,10 @@
       <label for="editTaskName">Task Name</label>
       <input type="text" id="editTaskName" />
     </div>
+    <div class="field" id="editAssigneeField" style="display:none;">
+      <label for="editAssignee">Assigned To</label>
+      <select id="editAssignee"></select>
+    </div>
     <div class="field">
       <label for="editPriority">Priority</label>
       <select id="editPriority">
@@ -424,7 +428,9 @@
     if (canAssign) {
       document.getElementById('viewToggle').style.display = 'flex';
       document.getElementById('assigneeField').style.display = 'block';
+      document.getElementById('editAssigneeField').style.display = 'block';
       populateAssigneeDropdown();
+      populateEditAssigneeDropdown();
     }
 
     document.getElementById('btnOwn').addEventListener('click', () => switchView('own'));
@@ -443,6 +449,11 @@
     const sel = document.getElementById('assigneeSelect');
     sel.innerHTML = '<option value="">Myself</option>' +
       ALL_EMPLOYEES.map(name => `<option value="${name}">${name}</option>`).join('');
+  }
+
+  function populateEditAssigneeDropdown() {
+    const sel = document.getElementById('editAssignee');
+    sel.innerHTML = ALL_EMPLOYEES.map(name => `<option value="${name}">${name}</option>`).join('');
   }
 
   function switchView(mode) {
@@ -468,6 +479,13 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to load tasks');
+
+      if (data.unmapped) {
+        statusEl.className = 'loading';
+        statusEl.textContent = 'Your account isn\'t linked to a team member yet. Contact an admin to get set up.';
+        boardEl.style.display = 'none';
+        return;
+      }
 
       renderBoard(data.results || []);
       statusEl.style.display = 'none';
@@ -546,7 +564,7 @@
     select.addEventListener('change', (e) => updateStatus(task.id, e.target.value));
 
     if (canEdit) {
-      card.addEventListener('click', () => openEditModal(task.id, name, priority, due, notes));
+      card.addEventListener('click', () => openEditModal(task.id, name, priority, due, notes, assignee));
     }
 
     return card;
@@ -568,12 +586,13 @@
     }
   }
 
-  function openEditModal(pageId, name, priority, due, notes) {
+  function openEditModal(pageId, name, priority, due, notes, assignee) {
     document.getElementById('editPageId').value = pageId;
     document.getElementById('editTaskName').value = name;
     document.getElementById('editPriority').value = priority || '';
     document.getElementById('editDueDate').value = due || '';
     document.getElementById('editNotes').value = notes || '';
+    if (canAssign) document.getElementById('editAssignee').value = assignee || '';
     document.getElementById('editOverlay').classList.add('open');
   }
 
@@ -587,6 +606,7 @@
     const priority = document.getElementById('editPriority').value;
     const dueDate = document.getElementById('editDueDate').value;
     const notes = document.getElementById('editNotes').value.trim();
+    const assignee = canAssign ? document.getElementById('editAssignee').value : undefined;
 
     if (!taskName) { alert('Task name cannot be empty.'); return; }
 
@@ -598,7 +618,7 @@
       const res = await fetch(`${WORKER_URL}/update-task`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pageId, taskName, priority, dueDate, notes, userLogin })
+        body: JSON.stringify({ pageId, taskName, priority, dueDate, notes, assignee, userLogin })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message || 'Failed to save changes');

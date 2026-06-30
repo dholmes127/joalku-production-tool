@@ -225,11 +225,15 @@
   // WordPress usernames allowed to log repairs
   const REPAIR_USERS = ['pius', 'pius.joalku']; // add more as needed
 
+  // WordPress usernames allowed to see total repair cost and individual repair costs
+  const FINANCE_USERS = ['kmadziwa', 'alice_madziwa', 'pius', 'pius.joalku']; // Kundai, Alice Madziwa, Pius
+
   // Check WordPress current user
   const wpUser = (typeof window.scbCurrentUser !== 'undefined' && window.scbCurrentUser?.login)
     ? window.scbCurrentUser.login.toLowerCase()
     : null;
   const canLogRepair = wpUser && REPAIR_USERS.includes(wpUser);
+  const canViewCosts = wpUser && FINANCE_USERS.includes(wpUser);
 
   let allVehicles = [];
   let allRepairs  = [];
@@ -499,7 +503,7 @@
           ${rp!=='—'?`<span>🔩 ${rp}</span>`:''}
           ${rb!=='—'?`<span>👤 ${rb}</span>`:''}
         </div>
-        ${rc!=null?`<div class="repair-cost" style="margin-top:6px">${fmtCost(rc)}</div>`:''}
+        ${(canViewCosts && rc!=null)?`<div class="repair-cost" style="margin-top:6px">${fmtCost(rc)}</div>`:''}
       </div>`;
     }).join('') : '<div class="state-msg" style="padding:20px 0"><strong>No repairs logged</strong></div>';
 
@@ -595,10 +599,10 @@
               ${['Teshie','Tema','Both'].map(l=>`<option ${loc===l?'selected':''}>${l}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group">
+          ${canViewCosts ? `<div class="form-group">
             <label>Total repair cost</label>
             <input type="text" value="${fmtCost(totalCost)}" disabled style="background:#f9f8f6;color:#999" />
-          </div>
+          </div>` : ''}
           <div class="form-group full">
             <label>Notes</label>
             <textarea id="f-notes-${id}">${notes!=='—'?notes:''}</textarea>

@@ -216,10 +216,10 @@
     : (typeof window.scbCurrentUser !== 'undefined' && window.scbCurrentUser?.login)
       ? window.scbCurrentUser.login.toLowerCase()
       : null;
-  const isAdmin = wpUser && CALENDAR_ADMIN_USERS.includes(wpUser);
+  const canEditProduction = wpUser && CALENDAR_ADMIN_USERS.includes(wpUser);
 
   // Show add button if admin
-  if (isAdmin) document.getElementById('addBtn').classList.add('visible');
+  if (canEditProduction) document.getElementById('addBtn').classList.add('visible');
 
   let allProductions = [];
   let currentView = 'today';
@@ -405,7 +405,7 @@
 
     // Show/hide edit tab for admins
     const editTab = document.getElementById('mt-edit');
-    if (isAdmin) {
+    if (canEditProduction) {
       editTab.classList.add('visible');
       document.getElementById('editFrame').src = EDIT_BASE;
     } else {
@@ -436,7 +436,7 @@
 
   // ── ADD PRODUCTION MODAL ──────────────────────────────────────────────────
   function openAddModal() {
-    if (!isAdmin) return;
+    if (!canEditProduction) return;
     document.getElementById('addFrame').src = NOTION_FORM;
     document.getElementById('addModalOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';

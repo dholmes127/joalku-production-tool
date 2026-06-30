@@ -324,6 +324,42 @@
   </div>
 </div>
 
+<!-- Edit Task Modal -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <h2>Edit Task</h2>
+    <input type="hidden" id="editPageId" />
+    <div class="field">
+      <label for="editTaskName">Task Name</label>
+      <input type="text" id="editTaskName" />
+    </div>
+    <div class="field">
+      <label for="editPriority">Priority</label>
+      <select id="editPriority">
+        <option value="">None</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="editDueDate">Due Date</label>
+      <input type="date" id="editDueDate" />
+    </div>
+    <div class="field">
+      <label for="editNotes">Notes</label>
+      <textarea id="editNotes"></textarea>
+    </div>
+    <div class="modal-actions" style="justify-content: space-between;">
+      <button class="btn-secondary" id="archiveBtn" style="color:#D9534F;">Archive Task</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-secondary" id="editCancelBtn">Cancel</button>
+        <button class="btn-primary" id="editSaveBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   // ---- Configuration ----
   const WORKER_URL = 'https://joalku-tasks.dholmes127.workers.dev';
@@ -396,6 +432,9 @@
     document.getElementById('newTaskBtn').addEventListener('click', openModal);
     document.getElementById('cancelBtn').addEventListener('click', closeModal);
     document.getElementById('saveTaskBtn').addEventListener('click', createTask);
+    document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+    document.getElementById('editSaveBtn').addEventListener('click', saveEditTask);
+    document.getElementById('archiveBtn').addEventListener('click', archiveCurrentTask);
 
     loadTasks();
   }
@@ -488,6 +527,7 @@
 
     const card = document.createElement('div');
     card.className = 'task-card';
+    card.style.cursor = canEdit ? 'pointer' : 'default';
     card.innerHTML = `
       <p class="task-name">${escapeHtml(name)}</p>
       <div class="task-meta">
@@ -502,7 +542,12 @@
     `;
 
     const select = card.querySelector('.status-select');
+    select.addEventListener('click', (e) => e.stopPropagation());
     select.addEventListener('change', (e) => updateStatus(task.id, e.target.value));
+
+    if (canEdit) {
+      card.addEventListener('click', () => openEditModal(task.id, name, priority, due, notes));
+    }
 
     return card;
   }
@@ -520,6 +565,71 @@
     } catch (err) {
       alert('Could not update status: ' + err.message);
       loadTasks();
+    }
+  }
+
+  function openEditModal(pageId, name, priority, due, notes) {
+    document.getElementById('editPageId').value = pageId;
+    document.getElementById('editTaskName').value = name;
+    document.getElementById('editPriority').value = priority || '';
+    document.getElementById('editDueDate').value = due || '';
+    document.getElementById('editNotes').value = notes || '';
+    document.getElementById('editOverlay').classList.add('open');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editOverlay').classList.remove('open');
+  }
+
+  async function saveEditTask() {
+    const pageId = document.getElementById('editPageId').value;
+    const taskName = document.getElementById('editTaskName').value.trim();
+    const priority = document.getElementById('editPriority').value;
+    const dueDate = document.getElementById('editDueDate').value;
+    const notes = document.getElementById('editNotes').value.trim();
+
+    if (!taskName) { alert('Task name cannot be empty.'); return; }
+
+    const btn = document.getElementById('editSaveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+      const res = await fetch(`${WORKER_URL}/update-task`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageId, taskName, priority, dueDate, notes, userLogin })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'Failed to save changes');
+
+      closeEditModal();
+      loadTasks();
+    } catch (err) {
+      alert('Could not save changes: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save Changes';
+    }
+  }
+
+  async function archiveCurrentTask() {
+    const pageId = document.getElementById('editPageId').value;
+    if (!confirm('Archive this task? It will be hidden from the board.')) return;
+
+    try {
+      const res = await fetch(`${WORKER_URL}/archive-task`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageId, userLogin, archived: true })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'Failed to archive task');
+
+      closeEditModal();
+      loadTasks();
+    } catch (err) {
+      alert('Could not archive task: ' + err.message);
     }
   }
 

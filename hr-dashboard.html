@@ -6,149 +6,76 @@
 <title>HR Dashboard — Joalku</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f9f8f6; color: #1a1a1a; min-height: 100vh;
-  }
-
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f8f6; color: #1a1a1a; min-height: 100vh; }
   .page { max-width: 860px; margin: 0 auto; padding: 32px 24px 80px; }
-
   .page-header { margin-bottom: 24px; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
   .page-title { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
   .page-sub { font-size: 13px; color: #999; }
-
-  /* Stats */
-  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; }
   .stat-card { background: #fff; border: 1px solid #ece9e3; border-radius: 10px; padding: 14px 16px; }
   .stat-num { font-size: 24px; font-weight: 500; }
   .stat-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; margin-top: 3px; }
-
-  /* Toolbar */
   .toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
   .search-wrap { position: relative; flex: 1; min-width: 200px; }
   .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; pointer-events: none; }
-
-  input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="tel"] {
-    width: 100%; padding: 9px 12px; border: 1px solid #e0ddd8;
-    border-radius: 8px; font-size: 14px; color: #1a1a1a;
-    background: #fff; outline: none; transition: border-color 0.15s;
-    font-family: inherit;
-  }
+  input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="tel"] { width: 100%; padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 8px; font-size: 14px; color: #1a1a1a; background: #fff; outline: none; transition: border-color 0.15s; font-family: inherit; }
   input:focus { border-color: #f28324; }
   input::placeholder { color: #bbb; }
   #searchInput { padding-left: 36px; }
-
-  select {
-    padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 8px;
-    font-size: 13px; color: #1a1a1a; background: #fff; outline: none;
-    cursor: pointer; appearance: none; font-family: inherit;
-    transition: border-color 0.15s;
-  }
+  select { padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 8px; font-size: 13px; color: #1a1a1a; background: #fff; outline: none; cursor: pointer; appearance: none; font-family: inherit; transition: border-color 0.15s; }
   select:focus { border-color: #f28324; }
-
-  textarea {
-    width: 100%; padding: 10px 12px; border: 1px solid #e0ddd8;
-    border-radius: 8px; font-size: 14px; color: #1a1a1a;
-    background: #fff; outline: none; resize: vertical; min-height: 80px;
-    font-family: inherit; transition: border-color 0.15s;
-  }
+  textarea { width: 100%; padding: 10px 12px; border: 1px solid #e0ddd8; border-radius: 8px; font-size: 14px; color: #1a1a1a; background: #fff; outline: none; resize: vertical; min-height: 80px; font-family: inherit; transition: border-color 0.15s; }
   textarea:focus { border-color: #f28324; }
-
-  /* View toggle */
   .view-toggle { display: flex; border: 1px solid #e0ddd8; border-radius: 8px; overflow: hidden; }
-  .view-btn {
-    padding: 8px 12px; background: #fff; border: none; cursor: pointer;
-    color: #999; font-size: 13px; transition: background 0.15s, color 0.15s;
-    border-right: 1px solid #e0ddd8;
-  }
+  .view-btn { padding: 8px 12px; background: #fff; border: none; cursor: pointer; color: #999; font-size: 13px; transition: background 0.15s, color 0.15s; border-right: 1px solid #e0ddd8; }
   .view-btn:last-child { border-right: none; }
   .view-btn.active { background: #f28324; color: #fff; }
-
-  .former-toggle {
-    font-size: 13px; color: #999; cursor: pointer; display: flex;
-    align-items: center; gap: 6px; white-space: nowrap; background: none;
-    border: 1px solid #e0ddd8; border-radius: 8px; padding: 8px 12px;
-    transition: border-color 0.15s, color 0.15s;
-  }
+  .former-toggle { font-size: 13px; color: #999; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; background: none; border: 1px solid #e0ddd8; border-radius: 8px; padding: 8px 12px; transition: border-color 0.15s, color 0.15s; }
   .former-toggle.active { border-color: #f28324; color: #f28324; }
-
+  .btn-add { background: #f28324; color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .btn-add:hover { background: #d4711e; }
   .results-header { font-size: 12px; color: #bbb; margin-bottom: 10px; }
-
-  /* LIST VIEW */
-  .emp-row {
-    background: #fff; border: 1px solid #ece9e3; border-radius: 8px;
-    padding: 14px 18px; cursor: pointer; transition: border-color 0.15s;
-    display: flex; align-items: center; gap: 14px; margin-bottom: 2px;
-  }
+  .emp-row { background: #fff; border: 1px solid #ece9e3; border-radius: 8px; padding: 14px 18px; cursor: pointer; transition: border-color 0.15s; display: flex; align-items: center; gap: 14px; margin-bottom: 2px; }
   .emp-row:hover { border-color: #d4c9b8; }
   .emp-row.open { border-color: #f28324; box-shadow: 0 0 0 1px #f28324; border-radius: 8px 8px 0 0; margin-bottom: 0; }
-
   .emp-info { flex: 1; min-width: 0; }
   .emp-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
   .emp-meta { font-size: 12px; color: #999; display: flex; gap: 10px; flex-wrap: wrap; }
-
   .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
   .status-dot.current { background: #22a06b; }
   .status-dot.former { background: #e53e3e; }
-
-  /* GRID VIEW */
   .emp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-  .emp-card {
-    background: #fff; border: 1px solid #ece9e3; border-radius: 10px;
-    padding: 16px; cursor: pointer; transition: border-color 0.15s;
-  }
+  .emp-card { background: #fff; border: 1px solid #ece9e3; border-radius: 10px; padding: 16px; cursor: pointer; transition: border-color 0.15s; }
   .emp-card:hover { border-color: #d4c9b8; }
   .emp-card.open { border-color: #f28324; box-shadow: 0 0 0 1px #f28324; }
   .card-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
   .card-role { font-size: 12px; color: #999; margin-bottom: 10px; }
   .card-dept { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #f3f4f6; color: #555; }
-
-  /* COMPACT VIEW */
   .emp-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ece9e3; }
   .emp-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: #bbb; padding: 10px 14px; border-bottom: 1px solid #ece9e3; text-align: left; background: #fafaf8; }
   .emp-table td { font-size: 13px; padding: 10px 14px; border-bottom: 1px solid #f3f2ef; color: #333; cursor: pointer; }
   .emp-table tr:last-child td { border-bottom: none; }
   .emp-table tr:hover td { background: #fafaf8; }
   .emp-table tr.open td { background: #fff8f2; }
-
-  /* Detail panel */
-  .detail-panel {
-    background: #fafaf8; border: 1px solid #f28324;
-    border-top: none; box-shadow: 0 0 0 1px #f28324;
-    border-radius: 0 0 8px 8px; margin-bottom: 10px; display: none;
-  }
+  .detail-panel { background: #fafaf8; border: 1px solid #f28324; border-top: none; box-shadow: 0 0 0 1px #f28324; border-radius: 0 0 8px 8px; margin-bottom: 10px; display: none; }
   .detail-panel.visible { display: block; }
-
   .panel-tabs { display: flex; border-bottom: 1px solid #ece9e3; background: #fff; }
-  .panel-tab {
-    padding: 12px 18px; font-size: 13px; font-weight: 500; color: #999;
-    border: none; background: none; cursor: pointer;
-    border-bottom: 2px solid transparent; margin-bottom: -1px;
-    transition: color 0.15s, border-color 0.15s;
-  }
+  .panel-tab { padding: 12px 18px; font-size: 13px; font-weight: 500; color: #999; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; }
   .panel-tab.active { color: #f28324; border-bottom-color: #f28324; }
-
   .panel-content { padding: 20px; display: none; }
   .panel-content.active { display: block; }
-
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
   .form-group label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; margin-bottom: 5px; }
   .form-group.full { grid-column: span 2; }
-
-  /* Leave */
   .leave-setup { background: #fff8f2; border: 1px solid #f28324; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
   .leave-setup p { font-size: 13px; color: #666; margin-bottom: 12px; }
   .leave-setup strong { color: #1a1a1a; }
   .leave-setup-row { display: flex; gap: 10px; align-items: center; }
   .leave-setup-row input { max-width: 120px; }
-
   .leave-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .leave-card { background: #fff; border: 1px solid #ece9e3; border-radius: 8px; padding: 12px; text-align: center; }
   .leave-card .num { font-size: 22px; font-weight: 500; }
   .leave-card .lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: #bbb; margin-top: 2px; }
-
-  /* Docs */
   .docs-list { display: flex; flex-direction: column; gap: 8px; }
   .doc-item { background: #fff; border: 1px solid #ece9e3; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
   .doc-icon { font-size: 16px; flex-shrink: 0; }
@@ -156,20 +83,12 @@
   .doc-meta { font-size: 11px; color: #999; margin-top: 2px; }
   .doc-link { font-size: 12px; color: #f28324; text-decoration: none; font-weight: 600; white-space: nowrap; }
   .doc-link:hover { text-decoration: underline; }
-
-  /* Notes */
-  .notes-content { background: #fff; border: 1px solid #ece9e3; border-radius: 8px; padding: 14px 16px; font-size: 13px; color: #444; line-height: 1.6; min-height: 80px; }
-  .notes-content.empty { color: #bbb; font-style: italic; }
-
-  /* Actions */
   .action-row { display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid #ece9e3; }
   .btn-save { background: #f28324; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: inherit; }
   .btn-save:hover { background: #d4711e; }
   .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-ghost-sm { background: none; color: #999; border: 1px solid #e0ddd8; border-radius: 8px; padding: 10px 16px; font-size: 13px; cursor: pointer; font-family: inherit; }
   .btn-ghost-sm:hover { background: #f3f3f1; }
-
-  /* States */
   .state-msg { text-align: center; padding: 40px 0; color: #bbb; font-size: 14px; }
   .state-msg strong { display: block; color: #888; margin-bottom: 4px; font-size: 15px; }
   .loading { display: flex; gap: 5px; justify-content: center; padding: 48px 0; }
@@ -177,24 +96,23 @@
   .loading span:nth-child(2) { animation-delay: 0.2s; }
   .loading span:nth-child(3) { animation-delay: 0.4s; }
   @keyframes pulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
-
   .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; transition: transform 0.25s ease; z-index: 100; white-space: nowrap; }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.ok { background: #1b5e20; }
   .toast.err { background: #b71c1c; }
-
-  @media (max-width: 560px) {
-    .stats-grid { grid-template-columns: repeat(3, 1fr); }
-    .form-grid { grid-template-columns: 1fr; }
-    .form-group.full { grid-column: span 1; }
-    .leave-summary { grid-template-columns: repeat(2, 1fr); }
-    .emp-grid { grid-template-columns: repeat(2, 1fr); }
-  }
+  /* Add Employee Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: none; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid #ece9e3; display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h2 { font-size: 18px; font-weight: 500; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; padding: 4px 8px; }
+  .modal-body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+  @media (max-width: 560px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .form-grid { grid-template-columns: 1fr; } .form-group.full { grid-column: span 1; } .leave-summary { grid-template-columns: repeat(2, 1fr); } .emp-grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
 <div class="page">
-
   <div class="page-header">
     <div>
       <p class="page-title">HR Dashboard</p>
@@ -203,7 +121,6 @@
   </div>
 
   <div class="stats-grid">
-    <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total staff</div></div>
     <div class="stat-card"><div class="stat-num" id="s-current">—</div><div class="stat-lbl">Current</div></div>
     <div class="stat-card"><div class="stat-num" id="s-depts">—</div><div class="stat-lbl">Departments</div></div>
   </div>
@@ -227,28 +144,93 @@
       <button class="view-btn" id="vgrid" onclick="setView('grid')" title="Grid">⊞</button>
       <button class="view-btn" id="vcompact" onclick="setView('compact')" title="Compact">≡</button>
     </div>
+    <button class="btn-add" onclick="openAddModal()">+ Add Employee</button>
   </div>
 
   <div id="resultsMeta" class="results-header"></div>
   <div id="list"></div>
 </div>
 
+<!-- Add Employee Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add Employee</h2>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Full Name *</label>
+          <input type="text" id="new-name" placeholder="e.g. John Mensah" />
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="new-role">
+            <option value="">— select —</option>
+            <option>Administrator</option>
+            <option>Electrician</option>
+            <option>Mechanic</option>
+            <option>Welder</option>
+            <option>Batching Plant Operator</option>
+            <option>Driver</option>
+            <option>Logistics</option>
+            <option>Quality Control</option>
+            <option>Cleaner</option>
+            <option>Security</option>
+            <option>Sales Representative</option>
+            <option>Manager</option>
+            <option>Director</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <select id="new-dept">
+            <option value="">— select —</option>
+            <option>Administration</option>
+            <option>Maintenance</option>
+            <option>Production</option>
+            <option>Sales</option>
+            <option>Other Departments</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="new-email" placeholder="email@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="new-phone" placeholder="+233..." />
+        </div>
+        <div class="form-group">
+          <label>Start Date in Company</label>
+          <input type="date" id="new-startco" />
+        </div>
+        <div class="form-group">
+          <label>Start Date in Position</label>
+          <input type="date" id="new-startpos" />
+        </div>
+      </div>
+      <div id="new-error" style="color:#b71c1c;font-size:13px;display:none;"></div>
+      <div class="action-row" style="border-top:none;padding-top:0;">
+        <button class="btn-save" id="new-submit" onclick="submitNewEmployee()">Add Employee</button>
+        <button class="btn-ghost-sm" onclick="closeAddModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  const WORKER = 'https://joalku-production-editer.dholmes127.workers.dev';
+  const WORKER  = 'https://joalku-production-editer.dholmes127.workers.dev';
   const EMP_DB  = '43c92733827e82b2b10981a17d455f57';
   const LEAVE_DB= '39f92733827e835987ce81ae3982c9fa';
   const DOC_DB  = '17192733827e82c2980401bf6c48ab15';
 
-  let allEmployees = [];
-  let allLeave = [];
-  let allDocs = [];
-  let openId = null;
-  let activeTab = {};
-  let searchTimer = null;
-  let showFormer = false;
-  let currentView = 'list';
+  let allEmployees = [], allLeave = [], allDocs = [];
+  let openId = null, activeTab = {}, searchTimer = null;
+  let showFormer = false, currentView = 'list';
 
   window.onload = load;
 
@@ -286,17 +268,27 @@
   function getProp(page, name, type='rich_text') {
     const p = page.properties[name];
     if (!p) return '—';
-    if (type==='title')     return p.title?.[0]?.plain_text||'—';
-    if (type==='rich_text') return p.rich_text?.[0]?.plain_text||'—';
-    if (type==='select')    return p.select?.name||'—';
-    if (type==='email')     return p.email||'—';
-    if (type==='phone')     return p.phone_number||'—';
-    if (type==='date')      return p.date?.start||'—';
-    if (type==='checkbox')  return p.checkbox||false;
-    if (type==='number')    return p.number??null;
-    if (type==='formula')   return p.formula?.number??p.formula?.string??null;
-    if (type==='files')     return p.files||[];
+    if (type==='title')        return p.title?.[0]?.plain_text||'—';
+    if (type==='rich_text')    return p.rich_text?.[0]?.plain_text||'—';
+    if (type==='select')       return p.select?.name||'—';
+    if (type==='multi_select') return p.multi_select?.map(o=>o.name)||[];
+    if (type==='email')        return p.email||'—';
+    if (type==='phone')        return p.phone_number||'—';
+    if (type==='date')         return p.date?.start||'—';
+    if (type==='checkbox')     return p.checkbox||false;
+    if (type==='number')       return p.number??null;
+    if (type==='formula')      return p.formula?.number??p.formula?.string??null;
+    if (type==='files')        return p.files||[];
     return '—';
+  }
+
+  // Get display role: Director > Manager > first functional role
+  function getDisplayRole(emp) {
+    const roles = getProp(emp, 'Role', 'multi_select');
+    if (!Array.isArray(roles) || roles.length === 0) return '—';
+    if (roles.includes('Director')) return 'Director';
+    if (roles.includes('Manager')) return 'Manager';
+    return roles[0];
   }
 
   function getLeaveRec(empName) {
@@ -314,8 +306,7 @@
 
   function updateStats() {
     const current = allEmployees.filter(e=>getProp(e,'Status','select')==='Current').length;
-    const depts = new Set(allEmployees.map(e=>getProp(e,'Department','select')).filter(d=>d!=='—')).size;
-    document.getElementById('s-total').textContent = allEmployees.length;
+    const depts = new Set(allEmployees.filter(e=>getProp(e,'Status','select')==='Current').map(e=>getProp(e,'Department','select')).filter(d=>d!=='—')).size;
     document.getElementById('s-current').textContent = current;
     document.getElementById('s-depts').textContent = depts;
   }
@@ -335,7 +326,7 @@
   function toggleFormer() {
     showFormer = !showFormer;
     document.getElementById('formerToggle').classList.toggle('active', showFormer);
-    document.getElementById('formerToggle').textContent = showFormer ? '👁 Hide former' : '👁 Show former';
+    document.getElementById('formerToggle').textContent = showFormer ? '👁 Show current' : '👁 Show former';
     openId = null;
     applyFiltersAndRender();
   }
@@ -344,11 +335,18 @@
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
     const dept = document.getElementById('deptFilter').value;
     let filtered = allEmployees;
-    if (!showFormer) filtered = filtered.filter(e => getProp(e,'Status','select') !== 'Former');
+
+    // showFormer = false → current only; showFormer = true → former only
+    if (!showFormer) {
+      filtered = filtered.filter(e => getProp(e,'Status','select') === 'Current');
+    } else {
+      filtered = filtered.filter(e => getProp(e,'Status','select') === 'Former');
+    }
+
     if (dept) filtered = filtered.filter(e => getProp(e,'Department','select') === dept);
     if (q) filtered = filtered.filter(e =>
       getProp(e,'Name','title').toLowerCase().includes(q) ||
-      getProp(e,'Role','select').toLowerCase().includes(q) ||
+      getDisplayRole(e).toLowerCase().includes(q) ||
       getProp(e,'Department','select').toLowerCase().includes(q) ||
       getProp(e,'Email','email').toLowerCase().includes(q)
     );
@@ -358,12 +356,8 @@
     else renderCompact(filtered);
   }
 
-  function onSearch() {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(applyFiltersAndRender, 200);
-  }
+  function onSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(applyFiltersAndRender, 200); }
 
-  // ── LIST VIEW ──────────────────────────────────────────────────────────────
   function renderList(employees) {
     const list = document.getElementById('list');
     if (!employees.length) { list.innerHTML = '<div class="state-msg"><strong>No employees found</strong></div>'; return; }
@@ -371,12 +365,11 @@
     employees.forEach(emp => {
       const id = emp.id;
       const name   = getProp(emp,'Name','title');
-      const role   = getProp(emp,'Role','select');
+      const role   = getDisplayRole(emp);
       const dept   = getProp(emp,'Department','select');
       const status = getProp(emp,'Status','select');
       const email  = getProp(emp,'Email','email');
       const display = role !== '—' ? role : dept !== '—' ? dept : '';
-
       const row = document.createElement('div');
       row.className = 'emp-row' + (openId===id?' open':'');
       row.dataset.id = id;
@@ -388,67 +381,54 @@
             ${display?`<span>${display}</span>`:''}
             ${email!=='—'?`<span>${email}</span>`:''}
           </div>
-        </div>
-      `;
+        </div>`;
       row.onclick = () => toggleDetail(id, emp);
       list.appendChild(row);
       list.appendChild(buildDetailPanel(id, emp));
     });
   }
 
-  // ── GRID VIEW ──────────────────────────────────────────────────────────────
   function renderGrid(employees) {
     const list = document.getElementById('list');
     if (!employees.length) { list.innerHTML = '<div class="state-msg"><strong>No employees found</strong></div>'; return; }
     list.innerHTML = '';
-
     const grid = document.createElement('div');
     grid.className = 'emp-grid';
-
     employees.forEach(emp => {
       const id = emp.id;
-      const name   = getProp(emp,'Name','title');
-      const role   = getProp(emp,'Role','select');
-      const dept   = getProp(emp,'Department','select');
-      const status = getProp(emp,'Status','select');
-      const display = role !== '—' ? role : dept !== '—' ? dept : '';
-
+      const name = getProp(emp,'Name','title');
+      const role = getDisplayRole(emp);
+      const dept = getProp(emp,'Department','select');
       const card = document.createElement('div');
       card.className = 'emp-card' + (openId===id?' open':'');
       card.dataset.id = id;
       card.innerHTML = `
         <div class="card-name">${name}</div>
-        <div class="card-role">${display}</div>
-        ${dept!=='—'?`<span class="card-dept">${dept}</span>`:''}
-      `;
+        <div class="card-role">${role !== '—' ? role : ''}</div>
+        ${dept!=='—'?`<span class="card-dept">${dept}</span>`:''}`;
       card.onclick = () => toggleDetailGrid(id, emp, grid);
       grid.appendChild(card);
     });
-
     list.appendChild(grid);
-
     if (openId) {
-      const panel = buildDetailPanel(openId, employees.find(e=>e.id===openId));
-      list.appendChild(panel);
-      panel.classList.add('visible');
-      panel.style.borderRadius = '8px';
-      panel.style.borderTop = '1px solid #f28324';
+      const found = employees.find(e=>e.id===openId);
+      if (found) {
+        const panel = buildDetailPanel(openId, found);
+        panel.classList.add('visible');
+        panel.style.borderRadius = '8px';
+        panel.style.borderTop = '1px solid #f28324';
+        list.appendChild(panel);
+      }
     }
   }
 
   function toggleDetailGrid(id, emp, grid) {
     const list = document.getElementById('list');
     const existing = document.getElementById('detail-'+id);
-    if (existing) {
-      openId = null;
-      grid.querySelectorAll('.emp-card').forEach(c => c.classList.remove('open'));
-      existing.remove();
-      return;
-    }
-    list.querySelectorAll('.detail-panel').forEach(p => p.remove());
-    grid.querySelectorAll('.emp-card').forEach(c => c.classList.remove('open'));
-    document.getElementById(id)?.classList.add('open');
-    grid.querySelectorAll('.emp-card').forEach(c => { if(c.dataset.id===id) c.classList.add('open'); });
+    if (existing) { openId = null; grid.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('open')); existing.remove(); return; }
+    list.querySelectorAll('.detail-panel').forEach(p=>p.remove());
+    grid.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('open'));
+    grid.querySelectorAll('.emp-card').forEach(c=>{ if(c.dataset.id===id) c.classList.add('open'); });
     openId = id;
     const panel = buildDetailPanel(id, emp);
     panel.classList.add('visible');
@@ -458,55 +438,42 @@
     panel.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
-  // ── COMPACT VIEW ────────────────────────────────────────────────────────────
   function renderCompact(employees) {
     const list = document.getElementById('list');
     if (!employees.length) { list.innerHTML = '<div class="state-msg"><strong>No employees found</strong></div>'; return; }
     list.innerHTML = '';
-
     const table = document.createElement('table');
     table.className = 'emp-table';
     table.innerHTML = `<thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Status</th><th>Email</th></tr></thead><tbody></tbody>`;
     const tbody = table.querySelector('tbody');
-
     employees.forEach(emp => {
       const id = emp.id;
       const name   = getProp(emp,'Name','title');
-      const role   = getProp(emp,'Role','select');
+      const role   = getDisplayRole(emp);
       const dept   = getProp(emp,'Department','select');
       const status = getProp(emp,'Status','select');
       const email  = getProp(emp,'Email','email');
-
       const tr = document.createElement('tr');
       tr.className = openId===id?'open':'';
       tr.dataset.id = id;
       tr.innerHTML = `<td><strong>${name}</strong></td><td>${role!=='—'?role:''}</td><td>${dept!=='—'?dept:''}</td><td>${status}</td><td>${email!=='—'?email:''}</td>`;
       tr.onclick = () => toggleDetailCompact(id, emp, table);
       tbody.appendChild(tr);
-
       if (openId===id) {
         const panelRow = document.createElement('tr');
-        panelRow.id = 'panel-row-'+id;
         const td = document.createElement('td');
-        td.colSpan = 5;
-        td.style.padding = '0';
+        td.colSpan = 5; td.style.padding = '0';
         const panel = buildDetailPanel(id, emp);
-        panel.style.borderRadius = '0';
-        panel.style.border = 'none';
-        panel.style.boxShadow = 'none';
-        panel.style.borderTop = '1px solid #f28324';
+        panel.style.borderRadius = '0'; panel.style.border = 'none'; panel.style.boxShadow = 'none'; panel.style.borderTop = '1px solid #f28324';
         panel.classList.add('visible');
-        td.appendChild(panel);
-        panelRow.appendChild(td);
-        tbody.appendChild(panelRow);
+        td.appendChild(panel); panelRow.appendChild(td); tbody.appendChild(panelRow);
       }
     });
-
     list.appendChild(table);
   }
 
   function toggleDetailCompact(id, emp, table) {
-    if (openId === id) { openId = null; } else { openId = id; }
+    openId = openId === id ? null : id;
     renderCompact(getFilteredEmployees());
   }
 
@@ -514,20 +481,16 @@
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
     const dept = document.getElementById('deptFilter').value;
     let filtered = allEmployees;
-    if (!showFormer) filtered = filtered.filter(e => getProp(e,'Status','select') !== 'Former');
+    if (!showFormer) { filtered = filtered.filter(e => getProp(e,'Status','select') === 'Current'); }
+    else { filtered = filtered.filter(e => getProp(e,'Status','select') === 'Former'); }
     if (dept) filtered = filtered.filter(e => getProp(e,'Department','select') === dept);
-    if (q) filtered = filtered.filter(e =>
-      getProp(e,'Name','title').toLowerCase().includes(q) ||
-      getProp(e,'Role','select').toLowerCase().includes(q) ||
-      getProp(e,'Department','select').toLowerCase().includes(q)
-    );
+    if (q) filtered = filtered.filter(e => getProp(e,'Name','title').toLowerCase().includes(q) || getDisplayRole(e).toLowerCase().includes(q) || getProp(e,'Department','select').toLowerCase().includes(q));
     return filtered;
   }
 
-  // ── DETAIL PANEL ───────────────────────────────────────────────────────────
   function buildDetailPanel(id, emp) {
     const name    = getProp(emp,'Name','title');
-    const role    = getProp(emp,'Role','select');
+    const role    = getDisplayRole(emp);
     const dept    = getProp(emp,'Department','select');
     const status  = getProp(emp,'Status','select');
     const email   = getProp(emp,'Email','email');
@@ -536,13 +499,11 @@
     const startPos= getProp(emp,'Start date in position','date');
     const salary  = getProp(emp,'Fixed salary','number');
     const bonus   = getProp(emp,'Annual bonus','number');
-
     const leaveRec = getLeaveRec(name);
     const total = leaveRec ? (getProp(leaveRec,'Total Leave Days','number')||0) : 0;
     const taken = leaveRec ? (getProp(leaveRec,'Leave Days Taken','number')||0) : 0;
     const sick  = leaveRec ? (getProp(leaveRec,'Sick Leave Days','number')||0) : 0;
     const left  = total - taken;
-
     const docs = getDocsFor(name);
     const tab  = activeTab[id] || 'profile';
 
@@ -554,14 +515,7 @@
       const fileUrl = files.length ? (files[0].file?.url || files[0].external?.url || '') : '';
       const notionUrl = `https://app.notion.com/p/${d.id.replace(/-/g,'')}`;
       const docEmoji = dt==='Contract'?'📋':dt==='Warning'?'⚠️':dt==='Loan'?'💰':dt==='Leave'?'🏖️':'📄';
-      return `<div class="doc-item">
-        <div class="doc-icon">${docEmoji}</div>
-        <div style="flex:1">
-          <div class="doc-name">${dn}</div>
-          <div class="doc-meta">${[dt,dy].filter(x=>x!=='—').join(' · ')}</div>
-        </div>
-        <a href="${fileUrl||notionUrl}" target="_blank" class="doc-link">${fileUrl?'Open file':'View →'}</a>
-      </div>`;
+      return `<div class="doc-item"><div class="doc-icon">${docEmoji}</div><div style="flex:1"><div class="doc-name">${dn}</div><div class="doc-meta">${[dt,dy].filter(x=>x!=='—').join(' · ')}</div></div><a href="${fileUrl||notionUrl}" target="_blank" class="doc-link">${fileUrl?'Open file':'View →'}</a></div>`;
     }).join('') : '<div class="state-msg" style="padding:20px 0"><strong>No documents</strong></div>';
 
     const leaveContent = leaveRec ? `
@@ -572,28 +526,17 @@
         <div class="leave-card"><div class="num">${sick}</div><div class="lbl">Sick</div></div>
       </div>
       <div class="form-grid">
-        <div class="form-group">
-          <label>Leave Days Taken</label>
-          <input type="number" id="f-taken-${id}" value="${taken}" min="0" step="0.5" />
-        </div>
-        <div class="form-group">
-          <label>Sick Leave Days</label>
-          <input type="number" id="f-sick-${id}" value="${sick}" min="0" step="0.5" />
-        </div>
+        <div class="form-group"><label>Leave Days Taken</label><input type="number" id="f-taken-${id}" value="${taken}" min="0" step="0.5" /></div>
+        <div class="form-group"><label>Sick Leave Days</label><input type="number" id="f-sick-${id}" value="${sick}" min="0" step="0.5" /></div>
       </div>
-      <div class="action-row">
-        <button class="btn-save" id="btn-leave-${id}" onclick="saveLeave('${id}','${leaveRec.id}',event)">Save leave</button>
-        <button class="btn-ghost-sm" onclick="closeDetail(event)">Cancel</button>
-      </div>
+      <div class="action-row"><button class="btn-save" id="btn-leave-${id}" onclick="saveLeave('${id}','${leaveRec.id}',event)">Save leave</button><button class="btn-ghost-sm" onclick="closeDetail(event)">Cancel</button></div>
     ` : `
       <div class="leave-setup">
         <p><strong>${name}</strong> doesn't have a leave record yet. How many leave days are they entitled to?</p>
-        <div class="leave-setup-row">
-          <input type="number" id="f-newleave-${id}" placeholder="e.g. 21" min="0" style="max-width:120px" />
-          <button class="btn-save" onclick="createLeaveRecord('${id}','${name}',event)">Set up leave</button>
-        </div>
-      </div>
-    `;
+        <div class="leave-setup-row"><input type="number" id="f-newleave-${id}" placeholder="e.g. 21" min="0" style="max-width:120px" /><button class="btn-save" onclick="createLeaveRecord('${id}','${name}',event)">Set up leave</button></div>
+      </div>`;
+
+    const allRoles = ['Administrator','Electrician','Mechanic','Welder','Batching Plant Operator','Driver','Logistics','Quality Control','Cleaner','Security','Sales Representative','Manager','Director'];
 
     const detail = document.createElement('div');
     detail.className = 'detail-panel';
@@ -604,86 +547,34 @@
         <button class="panel-tab ${tab==='docs'?'active':''}" onclick="switchTab('${id}','docs',event)">Documents (${docs.length})</button>
         <button class="panel-tab ${tab==='leave'?'active':''}" onclick="switchTab('${id}','leave',event)">Leave</button>
       </div>
-
       <div class="panel-content ${tab==='profile'?'active':''}" id="tab-profile-${id}">
         <div class="form-grid">
-          <div class="form-group">
-            <label>Full name</label>
-            <input type="text" id="f-name-${id}" value="${name!=='—'?name:''}" />
-          </div>
-          <div class="form-group">
-            <label>Role</label>
-            <select id="f-role-${id}">
-              <option value="">— select —</option>
-              ${['Administrator','Electrician','Mechanic','Welder','Batching Plant Operator','Driver','Logistics','Quality Control','Cleaner','Security','Sales Representative'].map(r=>`<option ${role===r?'selected':''}>${r}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Department</label>
-            <select id="f-dept-${id}">
-              <option value="">— select —</option>
-              ${['Administration','Maintenance','Production','Sales','Other Departments'].map(d=>`<option ${dept===d?'selected':''}>${d}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Status</label>
-            <select id="f-status-${id}">
-              <option ${status==='Current'?'selected':''}>Current</option>
-              <option ${status==='Former'?'selected':''}>Former</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="f-email-${id}" value="${email!=='—'?email:''}" />
-          </div>
-          <div class="form-group">
-            <label>Phone</label>
-            <input type="tel" id="f-phone-${id}" value="${phone!=='—'?phone:''}" />
-          </div>
-          <div class="form-group">
-            <label>Start date in company</label>
-            <input type="date" id="f-startco-${id}" value="${startCo!=='—'?startCo:''}" />
-          </div>
-          <div class="form-group">
-            <label>Start date in position</label>
-            <input type="date" id="f-startpos-${id}" value="${startPos!=='—'?startPos:''}" />
-          </div>
-          <div class="form-group">
-            <label>Fixed salary</label>
-            <input type="number" id="f-salary-${id}" value="${salary!=null?salary:''}" />
-          </div>
-          <div class="form-group">
-            <label>Annual bonus</label>
-            <input type="number" id="f-bonus-${id}" value="${bonus!=null?bonus:''}" />
-          </div>
+          <div class="form-group"><label>Full name</label><input type="text" id="f-name-${id}" value="${name!=='—'?name:''}" /></div>
+          <div class="form-group"><label>Role</label><select id="f-role-${id}">${allRoles.map(r=>`<option ${role===r?'selected':''}>${r}</option>`).join('')}</select></div>
+          <div class="form-group"><label>Department</label><select id="f-dept-${id}"><option value="">— select —</option>${['Administration','Maintenance','Production','Sales','Other Departments'].map(d=>`<option ${dept===d?'selected':''}>${d}</option>`).join('')}</select></div>
+          <div class="form-group"><label>Status</label><select id="f-status-${id}"><option ${status==='Current'?'selected':''}>Current</option><option ${status==='Former'?'selected':''}>Former</option></select></div>
+          <div class="form-group"><label>Email</label><input type="email" id="f-email-${id}" value="${email!=='—'?email:''}" /></div>
+          <div class="form-group"><label>Phone</label><input type="tel" id="f-phone-${id}" value="${phone!=='—'?phone:''}" /></div>
+          <div class="form-group"><label>Start date in company</label><input type="date" id="f-startco-${id}" value="${startCo!=='—'?startCo:''}" /></div>
+          <div class="form-group"><label>Start date in position</label><input type="date" id="f-startpos-${id}" value="${startPos!=='—'?startPos:''}" /></div>
+          <div class="form-group"><label>Fixed salary</label><input type="number" id="f-salary-${id}" value="${salary!=null?salary:''}" /></div>
+          <div class="form-group"><label>Annual bonus</label><input type="number" id="f-bonus-${id}" value="${bonus!=null?bonus:''}" /></div>
         </div>
         <div class="action-row">
           <button class="btn-save" id="btn-profile-${id}" onclick="saveProfile('${id}',event)">Save changes</button>
           <button class="btn-ghost-sm" onclick="closeDetail(event)">Cancel</button>
         </div>
       </div>
-
-      <div class="panel-content ${tab==='docs'?'active':''}" id="tab-docs-${id}">
-        <div class="docs-list">${docsHtml}</div>
-      </div>
-
-      <div class="panel-content ${tab==='leave'?'active':''}" id="tab-leave-${id}">
-        ${leaveContent}
-      </div>
-    `;
+      <div class="panel-content ${tab==='docs'?'active':''}" id="tab-docs-${id}"><div class="docs-list">${docsHtml}</div></div>
+      <div class="panel-content ${tab==='leave'?'active':''}" id="tab-leave-${id}">${leaveContent}</div>`;
     return detail;
   }
 
   function toggleDetail(id, emp) {
     const list = document.getElementById('list');
-    if (openId === id) {
-      openId = null;
-      document.querySelectorAll('.emp-row').forEach(r => r.classList.remove('open'));
-      document.querySelectorAll('.detail-panel').forEach(d => d.remove());
-      return;
-    }
-    document.querySelectorAll('.emp-row').forEach(r => r.classList.remove('open'));
-    document.querySelectorAll('.detail-panel').forEach(d => d.remove());
+    if (openId === id) { openId = null; document.querySelectorAll('.emp-row').forEach(r=>r.classList.remove('open')); document.querySelectorAll('.detail-panel').forEach(d=>d.remove()); return; }
+    document.querySelectorAll('.emp-row').forEach(r=>r.classList.remove('open'));
+    document.querySelectorAll('.detail-panel').forEach(d=>d.remove());
     openId = id;
     const row = list.querySelector(`.emp-row[data-id="${id}"]`);
     if (row) row.classList.add('open');
@@ -693,20 +584,15 @@
     panel.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
-  function closeDetail(e) {
-    e.stopPropagation();
-    openId = null;
-    document.querySelectorAll('.emp-row,.emp-card').forEach(r => r.classList.remove('open'));
-    document.querySelectorAll('.detail-panel').forEach(d => d.remove());
-  }
+  function closeDetail(e) { e.stopPropagation(); openId = null; document.querySelectorAll('.emp-row,.emp-card').forEach(r=>r.classList.remove('open')); document.querySelectorAll('.detail-panel').forEach(d=>d.remove()); }
 
   function switchTab(id, tab, e) {
     e.stopPropagation();
     activeTab[id] = tab;
     const panel = document.getElementById('detail-'+id);
     if (!panel) return;
-    panel.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
-    panel.querySelectorAll('.panel-content').forEach(c => c.classList.remove('active'));
+    panel.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
+    panel.querySelectorAll('.panel-content').forEach(c=>c.classList.remove('active'));
     e.target.classList.add('active');
     const content = document.getElementById(`tab-${tab}-${id}`);
     if (content) content.classList.add('active');
@@ -716,20 +602,20 @@
     e.stopPropagation();
     const btn = document.getElementById('btn-profile-'+id);
     btn.disabled=true; btn.textContent='Saving…';
+    const role = document.getElementById('f-role-'+id).value;
     const props = {
       'Name': { title: [{ type:'text', text:{ content: document.getElementById('f-name-'+id).value.trim() } }] },
       'Email': { email: document.getElementById('f-email-'+id).value.trim()||null },
       'Phone': { phone_number: document.getElementById('f-phone-'+id).value.trim()||null },
     };
-    const role    = document.getElementById('f-role-'+id).value;
-    const dept    = document.getElementById('f-dept-'+id).value;
-    const status  = document.getElementById('f-status-'+id).value;
-    const startCo = document.getElementById('f-startco-'+id).value;
-    const startPos= document.getElementById('f-startpos-'+id).value;
-    const salary  = parseFloat(document.getElementById('f-salary-'+id).value);
-    const bonus   = parseFloat(document.getElementById('f-bonus-'+id).value);
-    if (role) props['Role'] = { select: { name: role } };
-    if (dept) props['Department'] = { select: { name: dept } };
+    if (role) props['Role'] = { multi_select: [{ name: role }] };
+    const dept   = document.getElementById('f-dept-'+id).value;
+    const status = document.getElementById('f-status-'+id).value;
+    const startCo= document.getElementById('f-startco-'+id).value;
+    const startPos=document.getElementById('f-startpos-'+id).value;
+    const salary = parseFloat(document.getElementById('f-salary-'+id).value);
+    const bonus  = parseFloat(document.getElementById('f-bonus-'+id).value);
+    if (dept)   props['Department'] = { select: { name: dept } };
     if (status) props['Status'] = { select: { name: status } };
     if (startCo) props['Start date in company'] = { date: { start: startCo } };
     if (startPos) props['Start date in position'] = { date: { start: startPos } };
@@ -738,8 +624,7 @@
     try {
       const r = await fetch(`${WORKER}/v1/pages/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({properties:props}) });
       if (!r.ok) throw new Error();
-      toast('Profile saved','ok');
-      btn.textContent='Saved ✓';
+      toast('Profile saved','ok'); btn.textContent='Saved ✓';
       setTimeout(()=>{ btn.disabled=false; btn.textContent='Save changes'; },2000);
       openId=null; load();
     } catch { toast('Failed to save','err'); btn.disabled=false; btn.textContent='Save changes'; }
@@ -752,10 +637,9 @@
     const taken = parseFloat(document.getElementById('f-taken-'+empId).value)||0;
     const sick  = parseFloat(document.getElementById('f-sick-'+empId).value)||0;
     try {
-      const r = await fetch(`${WORKER}/v1/pages/${leaveId}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ properties: { 'Leave Days Taken':{ number:taken }, 'Sick Leave Days':{ number:sick } } }) });
+      const r = await fetch(`${WORKER}/v1/pages/${leaveId}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ properties: { 'Leave Days Taken':{ number:taken },'Sick Leave Days':{ number:sick } } }) });
       if (!r.ok) throw new Error();
-      toast('Leave updated','ok');
-      btn.textContent='Saved ✓';
+      toast('Leave updated','ok'); btn.textContent='Saved ✓';
       setTimeout(()=>{ btn.disabled=false; btn.textContent='Save leave'; },2000);
       openId=null; load();
     } catch { toast('Failed to save','err'); btn.disabled=false; btn.textContent='Save leave'; }
@@ -764,26 +648,56 @@
   async function createLeaveRecord(empId, empName, e) {
     e.stopPropagation();
     const days = parseFloat(document.getElementById('f-newleave-'+empId).value);
-    if (!days || isNaN(days)) { toast('Enter number of days','err'); return; }
-    const btn = e.target;
-    btn.disabled=true; btn.textContent='Creating…';
+    if (!days||isNaN(days)) { toast('Enter number of days','err'); return; }
+    const btn = e.target; btn.disabled=true; btn.textContent='Creating…';
     try {
-      const r = await fetch(`${WORKER}/v1/pages`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          parent: { database_id: LEAVE_DB },
-          properties: {
-            'Name': { title: [{ type:'text', text:{ content: `${empName} - ${new Date().getFullYear()}` } }] },
-            'Total Leave Days': { number: days },
-            'Leave Days Taken': { number: 0 },
-            'Sick Leave Days': { number: 0 }
-          }
-        })
-      });
+      const r = await fetch(`${WORKER}/v1/pages`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ parent:{ database_id:LEAVE_DB }, properties:{ 'Name':{ title:[{ type:'text', text:{ content:`${empName} - ${new Date().getFullYear()}` } }] },'Total Leave Days':{ number:days },'Leave Days Taken':{ number:0 },'Sick Leave Days':{ number:0 } } }) });
       if (!r.ok) throw new Error();
-      toast('Leave record created','ok');
-      openId=null; load();
+      toast('Leave record created','ok'); openId=null; load();
     } catch { toast('Failed to create','err'); btn.disabled=false; btn.textContent='Set up leave'; }
+  }
+
+  // Add Employee
+  function openAddModal() { document.getElementById('addModal').classList.add('open'); }
+  function closeAddModal() {
+    document.getElementById('addModal').classList.remove('open');
+    ['new-name','new-email','new-phone','new-startco','new-startpos'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('new-role').value='';
+    document.getElementById('new-dept').value='';
+    document.getElementById('new-error').style.display='none';
+  }
+
+  async function submitNewEmployee() {
+    const name = document.getElementById('new-name').value.trim();
+    const errEl = document.getElementById('new-error');
+    if (!name) { errEl.textContent='Full name is required.'; errEl.style.display='block'; return; }
+    errEl.style.display='none';
+    const btn = document.getElementById('new-submit');
+    btn.disabled=true; btn.textContent='Adding…';
+    const role  = document.getElementById('new-role').value;
+    const dept  = document.getElementById('new-dept').value;
+    const email = document.getElementById('new-email').value.trim();
+    const phone = document.getElementById('new-phone').value.trim();
+    const startCo  = document.getElementById('new-startco').value;
+    const startPos = document.getElementById('new-startpos').value;
+    const props = {
+      'Name': { title: [{ type:'text', text:{ content:name } }] },
+      'Status': { select: { name:'Current' } }
+    };
+    if (role)    props['Role'] = { multi_select: [{ name:role }] };
+    if (dept)    props['Department'] = { select: { name:dept } };
+    if (email)   props['Email'] = { email };
+    if (phone)   props['Phone'] = { phone_number:phone };
+    if (startCo) props['Start date in company'] = { date: { start:startCo } };
+    if (startPos) props['Start date in position'] = { date: { start:startPos } };
+    try {
+      const r = await fetch(`${WORKER}/v1/pages`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ parent:{ database_id:EMP_DB }, properties:props }) });
+      if (!r.ok) throw new Error();
+      toast('Employee added','ok');
+      closeAddModal();
+      load();
+    } catch { toast('Failed to add employee','err'); }
+    finally { btn.disabled=false; btn.textContent='Add Employee'; }
   }
 
   function toast(msg, type='') {

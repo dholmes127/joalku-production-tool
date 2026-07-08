@@ -53,6 +53,9 @@
   .prod-time-badge { font-size: 14px; font-weight: 600; padding: 4px 12px; border-radius: 20px; flex-shrink: 0; align-self: flex-start; }
   .prod-time-badge.tbd { background: #fff3e0; color: #c65a00; }
   .prod-time-badge.set { background: #e8f5e9; color: #1b5e20; }
+  .prod-time-badge.in-progress { background: #e6f1fb; color: #1a6fc4; }
+  .prod-time-badge.completed { background: #e8f5e9; color: #1b5e20; }
+  .prod-time-badge.cancelled { background: #fce4ec; color: #880e4f; }
   .empty-day { font-size: 16px; color: #ccc; padding: 12px 0; font-style: italic; }
 
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
@@ -300,13 +303,6 @@
     return getProp(p,'Production Name','title');
   }
 
-  const STATUS_COLORS = {
-    'Scheduled':   { bg:'#fff3e0', color:'#c65a00' },
-    'In Progress': { bg:'#e6f1fb', color:'#1a6fc4' },
-    'Completed':   { bg:'#e8f5e9', color:'#1b5e20' },
-    'Cancelled':   { bg:'#fce4ec', color:'#880e4f' }
-  };
-
   function getProdsForDate(dateStr) {
     const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
     let prods = allProductions.filter(p => getProp(p,'Date of Supply','date') === dateStr);
@@ -348,7 +344,18 @@
     const producingAt = getProp(p,'Producing At','select');
     const status      = getProp(p,'Status','select');
     const isTbd       = time==='TBD'||time==='—';
-    const sc          = STATUS_COLORS[status] || { bg:'#f0f0f0', color:'#555' };
+
+    // Time pill: shows status if In Progress/Completed/Cancelled, otherwise shows time/TBD
+    let pillText, pillClass;
+    if (status === 'In Progress') {
+      pillText = 'In Progress'; pillClass = 'in-progress';
+    } else if (status === 'Completed') {
+      pillText = 'Completed'; pillClass = 'completed';
+    } else if (status === 'Cancelled') {
+      pillText = 'Cancelled'; pillClass = 'cancelled';
+    } else {
+      pillText = isTbd ? 'TBD' : time; pillClass = isTbd ? 'tbd' : 'set';
+    }
 
     return `<div class="prod-card" onclick="openProduction('${id}')">
       <div class="prod-card-left">
@@ -356,10 +363,9 @@
         <div class="prod-card-meta">
           ${producingAt!=='—'?`<span>🏭 ${producingAt}</span>`:''}
           ${location!=='—'?`<span>📍 ${location}</span>`:''}
-          <span style="display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px;background:${sc.bg};color:${sc.color};">${status!=='—'?status:'Scheduled'}</span>
         </div>
       </div>
-      <div class="prod-time-badge ${isTbd?'tbd':'set'}">${isTbd?'TBD':time}</div>
+      <div class="prod-time-badge ${pillClass}">${pillText}</div>
     </div>`;
   }
 

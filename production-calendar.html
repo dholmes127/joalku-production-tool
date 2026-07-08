@@ -14,7 +14,6 @@
 
   .page { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
 
-  /* Header */
   .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
   .cal-title { font-size: 22px; font-weight: 500; }
   .cal-nav { display: flex; align-items: center; gap: 10px; }
@@ -22,30 +21,25 @@
   .nav-btn:hover { background: #f0efeb; }
   .nav-label { font-size: 16px; font-weight: 500; min-width: 160px; text-align: center; }
 
-  /* View tabs */
   .view-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #fff; border: 1px solid #e0ddd8; border-radius: 10px; padding: 4px; width: fit-content; }
   .view-tab { padding: 8px 16px; font-size: 16px; font-weight: 500; border: none; background: none; cursor: pointer; border-radius: 7px; color: #999; transition: background 0.15s, color 0.15s; font-family: inherit; }
   .view-tab.active { background: #f28324; color: #fff; }
 
-  /* Add button */
   .add-btn { background: #f28324; color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: inherit; display: none; }
   .add-btn:hover { background: #d4711e; }
   .add-btn.visible { display: block; }
 
-  /* Loading */
   .loading { display: flex; gap: 5px; justify-content: center; padding: 48px 0; }
   .loading span { width: 7px; height: 7px; border-radius: 50%; background: #f28324; opacity: 0.4; animation: pulse 1.2s infinite; }
   .loading span:nth-child(2) { animation-delay: 0.2s; }
   .loading span:nth-child(3) { animation-delay: 0.4s; }
   @keyframes pulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
 
-  /* Day group (today + upcoming) */
   .day-group { margin-bottom: 24px; }
   .day-label { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #bbb; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
   .day-label.today-label { color: #f28324; }
   .day-label .today-dot { width: 6px; height: 6px; border-radius: 50%; background: #f28324; }
 
-  /* Production card */
   .prod-card {
     background: #fff; border: 1px solid #ece9e3; border-radius: 10px;
     padding: 16px 18px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
@@ -61,31 +55,6 @@
   .prod-time-badge.set { background: #e8f5e9; color: #1b5e20; }
   .empty-day { font-size: 16px; color: #ccc; padding: 12px 0; font-style: italic; }
 
-  /* Week view */
-  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-  .week-day { background: #fff; border: 1px solid #ece9e3; border-radius: 10px; min-height: 120px; padding: 10px; }
-  .week-day.today { border-color: #f28324; box-shadow: 0 0 0 1px #f28324; }
-  .week-day-label { font-size: 14px; font-weight: 600; color: #bbb; margin-bottom: 6px; text-align: center; }
-  .week-day.today .week-day-label { color: #f28324; }
-  .week-day-num { font-size: 18px; font-weight: 500; text-align: center; margin-bottom: 8px; }
-  .week-prod { background: #fff3e0; border-radius: 6px; padding: 5px 8px; font-size: 14px; font-weight: 500; color: #c65a00; margin-bottom: 4px; cursor: pointer; transition: background 0.15s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .week-prod:hover { background: #ffe0b2; }
-  .week-prod.tbd { background: #fce4ec; color: #880e4f; }
-  .week-prod.set { background: #e8f5e9; color: #1b5e20; }
-
-  /* Month view */
-  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .month-day-header { font-size: 14px; font-weight: 600; color: #bbb; text-align: center; padding: 6px 0; }
-  .month-day { background: #fff; border: 1px solid #ece9e3; border-radius: 8px; min-height: 90px; padding: 8px; }
-  .month-day.today { border-color: #f28324; }
-  .month-day.other-month { background: #f9f8f6; opacity: 0.5; }
-  .month-day-num { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-  .month-day.today .month-day-num { color: #f28324; }
-  .month-prod { background: #fff3e0; border-radius: 4px; padding: 2px 6px; font-size: 14px; color: #c65a00; margin-bottom: 3px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .month-prod:hover { background: #ffe0b2; }
-  .month-more { font-size: 14px; color: #bbb; margin-top: 2px; }
-
-  /* Modal */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
   .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 780px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
@@ -102,25 +71,12 @@
   .modal-content.active { display: block; }
   .modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: #999; padding: 4px 8px; margin-top: -4px; }
   .modal-close:hover { color: #1a1a1a; }
-
   .modal-iframe { width: 100%; height: 560px; border: none; display: block; }
-  .notion-frame { width: 100%; height: 700px; border: none; display: block; }
-
-  .edit-wrapper { padding: 0; }
   .edit-frame { width: 100%; height: 700px; border: none; display: block; }
-
   .state-msg { text-align: center; padding: 48px 24px; color: #bbb; font-size: 16px; }
   .state-msg strong { display: block; color: #888; margin-bottom: 4px; font-size: 18px; }
-
   .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 16px; font-weight: 500; transition: transform 0.25s ease; z-index: 300; white-space: nowrap; }
   .toast.show { transform: translateX(-50%) translateY(0); }
-
-  @media (max-width: 640px) {
-    .week-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; }
-    .week-day { min-height: 80px; padding: 6px; }
-    .month-day { min-height: 60px; padding: 4px; }
-    .modal { border-radius: 10px; }
-  }
 </style>
 </head>
 <body>
@@ -155,7 +111,7 @@
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Production Modal -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
   <div class="modal" id="modal">
     <div class="modal-header">
@@ -260,18 +216,18 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const WORKER   = 'https://joalku-production-editer.dholmes127.workers.dev';
-  const PROD_DB  = 'ec892733827e8384a0e10137c50c9d16';
+  const WORKER       = 'https://joalku-production-editer.dholmes127.workers.dev';
+  const PROD_DB      = 'ec892733827e8384a0e10137c50c9d16';
   const DISPATCH_BASE = 'https://dholmes127.github.io/dispatch-board/?id=';
   const EDIT_BASE     = 'https://dholmes127.github.io/joalku-production-tool/joalku-schedule.html';
-  const NOTION_FORM   = 'https://www.notion.so/dholmes127/38e92733827e806b807cea3ae7a1b6a1'; // update with your form URL
 
-  // Users allowed to edit/add productions
+  // Users allowed to add/edit productions AND click dispatch buttons
   const CALENDAR_ADMIN_USERS = ['daniel_amegah'];
+  // Users allowed to click dispatch board buttons (separate list for when others are added)
+  const DISPATCH_ADMIN_USERS = ['daniel_amegah'];
+  // add 3 more here when their accounts are created:
+  // 'username2', 'username3', 'username4'
 
-  // Check WordPress current user — passed via ?login=... in the iframe URL
-  // since this page is iframed from a different domain (GitHub Pages) and
-  // can't read window.scbCurrentUser directly (cross-origin).
   const urlParams = new URLSearchParams(window.location.search);
   const loginFromUrl = urlParams.get('login');
   const wpUser = loginFromUrl
@@ -279,9 +235,10 @@
     : (typeof window.scbCurrentUser !== 'undefined' && window.scbCurrentUser?.login)
       ? window.scbCurrentUser.login.toLowerCase()
       : null;
-  const canEditProduction = wpUser && CALENDAR_ADMIN_USERS.includes(wpUser);
 
-  // Show add button if admin
+  const canEditProduction = wpUser && CALENDAR_ADMIN_USERS.includes(wpUser);
+  const canDispatch       = wpUser && DISPATCH_ADMIN_USERS.includes(wpUser);
+
   if (canEditProduction) document.getElementById('addBtn').classList.add('visible');
 
   let allProductions = [];
@@ -290,7 +247,6 @@
   currentDate.setHours(0,0,0,0);
 
   const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   window.onload = load;
 
@@ -336,7 +292,6 @@
   }
 
   function onSearch() { render(); }
-
   function dateStr(d) { return d.toISOString().slice(0,10); }
 
   function fmtDayLabel(d) {
@@ -369,8 +324,6 @@
       <div class="prod-time-badge ${isTbd?'tbd':'set'}">${isTbd?'TBD':time}</div>
     </div>`;
   }
-
-  // ── VIEWS ──────────────────────────────────────────────────────────────────
 
   function renderToday() {
     const today = new Date(); today.setHours(0,0,0,0);
@@ -419,7 +372,7 @@
     ).sort((a,b) => {
       const da = getProp(a,'Date of Supply','date');
       const db = getProp(b,'Date of Supply','date');
-      return (db||'').localeCompare(da||''); // most recent first
+      return (db||'').localeCompare(da||'');
     });
 
     document.getElementById('navLabel').textContent = `Search results for "${q}"`;
@@ -443,7 +396,7 @@
   function render() {
     const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
     if (q) { renderSearchResults(q); return; }
-    if (currentView==='today')    renderToday();
+    if (currentView==='today') renderToday();
     else renderUpcoming();
   }
 
@@ -465,7 +418,6 @@
         ? prods.map(p => prodCard(p)).join('')
         : '<div class="state-msg"><strong>No productions</strong></div>';
     }
-    // no nav for upcoming
   }
 
   function goToday() {
@@ -473,9 +425,7 @@
     render();
   }
 
-  // ── MODAL ─────────────────────────────────────────────────────────────────
   function openProduction(pageId) {
-    // Find production
     const p = allProductions.find(x => x.id === pageId);
     if (!p) return;
 
@@ -493,20 +443,20 @@
     if (location!=='—') metaParts.push('📍 '+location);
     document.getElementById('modalMeta').innerHTML = metaParts.map(m=>`<span>${m}</span>`).join('');
 
-    // Set dispatch iframe
+    // Pass both ?id= and ?login= to dispatch board so it can gate button clicks
     const cleanId = pageId.replace(/-/g,'');
-    document.getElementById('dispatchFrame').src = DISPATCH_BASE + cleanId;
+    const dispatchUrl = `${DISPATCH_BASE}${cleanId}&login=${encodeURIComponent(wpUser || '')}`;
+    document.getElementById('dispatchFrame').src = dispatchUrl;
 
     // Show/hide edit tab for admins
     const editTab = document.getElementById('mt-edit');
     if (canEditProduction) {
       editTab.classList.add('visible');
-      document.getElementById('editFrame').src = EDIT_BASE + '?id=' + cleanId;
+      document.getElementById('editFrame').src = `${EDIT_BASE}?id=${cleanId}`;
     } else {
       editTab.classList.remove('visible');
     }
 
-    // Reset to dispatch tab
     switchModalTab('dispatch');
     document.getElementById('modalOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -528,7 +478,6 @@
     });
   }
 
-  // ── ADD PRODUCTION MODAL ──────────────────────────────────────────────────
   function openAddModal() {
     if (!canEditProduction) return;
     document.getElementById('addProductionForm').reset();
@@ -558,36 +507,25 @@
       return;
     }
 
-    const properties = {
-      'Production Name': { title: [{ text: { content: name } }] }
-    };
+    const properties = { 'Production Name': { title: [{ text: { content: name } }] } };
     const project = document.getElementById('apProject').value.trim();
     if (project) properties['Project Name'] = { rich_text: [{ text: { content: project } }] };
-
     const volume = document.getElementById('apVolume').value;
     if (volume !== '') properties['Volume (m³)'] = { number: Number(volume) };
-
     const mode = document.getElementById('apMode').value;
     if (mode) properties['Mode of Discharge'] = { select: { name: mode } };
-
     const timeVal = document.getElementById('apTime').value.trim();
     if (timeVal) properties['Time of Concrete at Site'] = { rich_text: [{ text: { content: timeVal } }] };
-
     const client = document.getElementById('apClient').value.trim();
     if (client) properties['Client Name'] = { rich_text: [{ text: { content: client } }] };
-
     const location = document.getElementById('apLocation').value.trim();
     if (location) properties['Location'] = { rich_text: [{ text: { content: location } }] };
-
     const dateVal = document.getElementById('apDate').value;
     if (dateVal) properties['Date of Supply'] = { date: { start: dateVal } };
-
     const cast = document.getElementById('apCast').value.trim();
     if (cast) properties['Cast Elements'] = { rich_text: [{ text: { content: cast } }] };
-
     const classOf = document.getElementById('apClass').value.trim();
     if (classOf) properties['Class of Concrete'] = { rich_text: [{ text: { content: classOf } }] };
-
     properties['Status'] = { select: { name: document.getElementById('apStatus').value } };
 
     const btn = document.getElementById('apSubmitBtn');
@@ -598,17 +536,13 @@
       const r = await fetch(`${WORKER}/v1/pages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          parent: { database_id: PROD_DB },
-          properties
-        })
+        body: JSON.stringify({ parent: { database_id: PROD_DB }, properties })
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.message || 'Failed to create production');
-
       closeAddModal();
       toast('Production created');
-      await load(); // refresh calendar data
+      await load();
     } catch (err) {
       errEl.textContent = 'Could not create production: ' + err.message;
       errEl.style.display = 'block';

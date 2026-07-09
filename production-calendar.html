@@ -58,6 +58,24 @@
   .prod-time-badge.cancelled { background: #fce4ec; color: #880e4f; }
   .empty-day { font-size: 16px; color: #ccc; padding: 12px 0; font-style: italic; }
 
+  /* Month grid */
+  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e8e6e0; border: 1px solid #e8e6e0; border-radius: 10px; overflow: hidden; }
+  .month-day-header { background: #f9f8f6; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; padding: 8px 10px; text-align: center; }
+  .month-day { background: #fff; min-height: 100px; padding: 8px; }
+  .month-day.other-month { background: #fafaf8; }
+  .month-day.today { background: #fff8f2; }
+  .month-day-num { font-size: 13px; font-weight: 600; color: #bbb; margin-bottom: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .month-day.today .month-day-num { background: #f28324; color: #fff; font-size: 12px; }
+  .month-day.other-month .month-day-num { color: #ddd; }
+  .month-prod { font-size: 12px; font-weight: 500; padding: 3px 7px; border-radius: 4px; margin-bottom: 3px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 0.1s; }
+  .month-prod:hover { opacity: 0.8; }
+  .month-prod.scheduled { background: #fff3e0; color: #c65a00; }
+  .month-prod.in-progress { background: #e6f1fb; color: #1a6fc4; }
+  .month-prod.completed { background: #e8f5e9; color: #1b5e20; }
+  .month-prod.cancelled { background: #fce4ec; color: #880e4f; }
+  .month-more { font-size: 11px; color: #bbb; padding: 2px 7px; cursor: pointer; }
+  .month-more:hover { color: #f28324; }
+
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
   .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 780px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
@@ -102,6 +120,7 @@
     <div class="view-tabs" style="margin-bottom:0;">
       <button class="view-tab active" id="vt-today" onclick="setView('today')">Today</button>
       <button class="view-tab" id="vt-upcoming" onclick="setView('upcoming')">Upcoming</button>
+      <button class="view-tab" id="vt-month" onclick="setView('month')">Month</button>
     </div>
     <div style="position:relative; flex:1; min-width:200px;">
       <input type="text" id="searchInput" placeholder="Search by name or client…" oninput="onSearch()"
@@ -237,9 +256,9 @@
   const EDIT_BASE     = 'https://dholmes127.github.io/joalku-production-tool/joalku-schedule.html';
 
   // Users allowed to add/edit productions AND click dispatch buttons
-  const CALENDAR_ADMIN_USERS = ['daniel_amegah', 'isaac_aidoo'];
+  const CALENDAR_ADMIN_USERS = ['daniel_amegah'];
   // Users allowed to click dispatch board buttons (separate list for when others are added)
-  const DISPATCH_ADMIN_USERS = ['daniel_amegah', 'jude_agyeman_badu', 'isaac_aidoo'];
+  const DISPATCH_ADMIN_USERS = ['daniel_amegah'];
   // add 3 more here when their accounts are created:
   // 'username2', 'username3', 'username4'
 
@@ -301,6 +320,27 @@
     const client = getProp(p,'Client Name');
     if (client && client !== '—') return client;
     return getProp(p,'Production Name','title');
+  }
+
+  function parseTime(timeStr) {
+    if (!timeStr || timeStr === '—' || timeStr === 'TBD') return 9999;
+    const t = timeStr.toUpperCase().replace('.', ':');
+    const match = t.match(/(\d+):?(\d*)\s*(AM|PM)?/);
+    if (!match) return 9999;
+    let h = parseInt(match[1]);
+    const m = parseInt(match[2] || '0');
+    const meridiem = match[3];
+    if (meridiem === 'PM' && h !== 12) h += 12;
+    if (meridiem === 'AM' && h === 12) h = 0;
+    return h * 60 + m;
+  }
+
+  function sortByTime(prods) {
+    return [...prods].sort((a, b) => {
+      const ta = parseTime(getProp(a,'Time of Concrete at Site'));
+      const tb = parseTime(getProp(b,'Time of Concrete at Site'));
+      return ta - tb;
+    });
   }
 
   function getProdsForDate(dateStr) {
@@ -372,7 +412,7 @@
   function renderToday() {
     const today = new Date(); today.setHours(0,0,0,0);
     const ds = dateStr(today);
-    const prods = getProdsForDate(ds);
+    const prods = sortByTime(getProdsForDate(ds));
     document.getElementById('navLabel').textContent = today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
     const cal = document.getElementById('calBody');
     cal.innerHTML = prods.length
@@ -389,7 +429,7 @@
     for (let i = 0; i < 7; i++) {
       const d = new Date(today); d.setDate(today.getDate() + i);
       const ds = dateStr(d);
-      const prods = getProdsForDate(ds);
+      const prods = sortByTime(getProdsForDate(ds));
       const isToday = i === 0;
 
       const group = document.createElement('div');
@@ -437,16 +477,66 @@
     cal.appendChild(group);
   }
 
+  function renderMonth() {
+    const cal = document.getElementById('calBody');
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('navLabel').textContent = `${MONTH_NAMES[month]} ${year}`;
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const firstDay = new Date(year, month, 1);
+    const lastDay  = new Date(year, month+1, 0);
+    const startDow = firstDay.getDay();
+    const startOffset = startDow === 0 ? 6 : startDow - 1; // Monday start
+
+    let html = '<div class="month-grid">';
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => { html += `<div class="month-day-header">${d}</div>`; });
+
+    for (let i = 0; i < startOffset; i++) {
+      const pd = new Date(year, month, -startOffset + i + 1);
+      html += `<div class="month-day other-month"><div class="month-day-num">${pd.getDate()}</div></div>`;
+    }
+
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const wd = new Date(year, month, d);
+      const ds = dateStr(wd);
+      const isToday = ds === dateStr(today);
+      const prods = sortByTime(allProductions.filter(p => getProp(p,'Date of Supply','date') === ds));
+      let prodsHtml = '';
+      prods.slice(0,3).forEach(p => {
+        const name = getDisplayName(p);
+        const status = getProp(p,'Status','select');
+        const cls = status==='In Progress'?'in-progress':status==='Completed'?'completed':status==='Cancelled'?'cancelled':'scheduled';
+        prodsHtml += `<div class="month-prod ${cls}" onclick="event.stopPropagation();openProduction('${p.id}')" title="${name}">${name}</div>`;
+      });
+      if (prods.length > 3) prodsHtml += `<div class="month-more">+${prods.length-3} more</div>`;
+      html += `<div class="month-day${isToday?' today':''}"><div class="month-day-num">${d}</div>${prodsHtml}</div>`;
+    }
+
+    const totalCells = startOffset + lastDay.getDate();
+    const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= remaining; i++) {
+      html += `<div class="month-day other-month"><div class="month-day-num">${i}</div></div>`;
+    }
+    html += '</div>';
+    cal.innerHTML = html;
+  }
+
   function render() {
     const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
     if (q) { renderSearchResults(q); return; }
     if (currentView==='today') renderToday();
-    else renderUpcoming();
+    else if (currentView==='upcoming') renderUpcoming();
+    else renderMonth();
   }
 
   function setView(v) {
     currentView = v;
-    ['today','upcoming'].forEach(x => document.getElementById('vt-'+x).classList.toggle('active', x===v));
+    ['today','upcoming','month'].forEach(x => {
+      const el = document.getElementById('vt-'+x);
+      if (el) el.classList.toggle('active', x===v);
+    });
     currentDate = new Date(); currentDate.setHours(0,0,0,0);
     render();
   }
@@ -456,11 +546,14 @@
       currentDate.setDate(currentDate.getDate()+dir);
       const cal = document.getElementById('calBody');
       const ds = dateStr(currentDate);
-      const prods = getProdsForDate(ds);
+      const prods = sortByTime(getProdsForDate(ds));
       document.getElementById('navLabel').textContent = currentDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
       cal.innerHTML = prods.length
         ? prods.map(p => prodCard(p)).join('')
         : '<div class="state-msg"><strong>No productions</strong></div>';
+    } else if (currentView==='month') {
+      currentDate.setMonth(currentDate.getMonth() + dir);
+      renderMonth();
     }
   }
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Production Calendar — Joalku</title>
+<title>Fleet Dashboard — Joalku</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,254 +12,225 @@
     background: #f9f8f6; color: #1a1a1a; min-height: 100vh;
   }
 
-  .page { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+  .page { max-width: 860px; margin: 0 auto; padding: 32px 24px 80px; }
 
-  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-  .cal-title { font-size: 22px; font-weight: 500; }
-  .cal-nav { display: flex; align-items: center; gap: 10px; }
-  .nav-btn { background: #fff; border: 1px solid #e0ddd8; border-radius: 8px; padding: 8px 14px; font-size: 16px; cursor: pointer; color: #555; font-family: inherit; transition: background 0.15s; }
-  .nav-btn:hover { background: #f0efeb; }
-  .nav-label { font-size: 16px; font-weight: 500; min-width: 160px; text-align: center; }
+  .page-header { margin-bottom: 24px; }
+  .page-title { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+  .page-sub { font-size: 16px; color: #999; }
 
-  .view-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #fff; border: 1px solid #e0ddd8; border-radius: 10px; padding: 4px; width: fit-content; }
-  .view-tab { padding: 8px 16px; font-size: 16px; font-weight: 500; border: none; background: none; cursor: pointer; border-radius: 7px; color: #999; transition: background 0.15s, color 0.15s; font-family: inherit; }
-  .view-tab.active { background: #f28324; color: #fff; }
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+  .stat-card { background: #fff; border: 1px solid #ece9e3; border-radius: 10px; padding: 14px 16px; }
+  .stat-num { font-size: 24px; font-weight: 500; }
+  .stat-lbl { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; margin-top: 3px; }
+  .stat-card.warn .stat-num { color: #f28324; }
+  .stat-card.danger .stat-num { color: #b71c1c; }
 
-  .add-btn { background: #f28324; color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: inherit; display: none; }
-  .add-btn:hover { background: #d4711e; }
-  .add-btn.visible { display: block; }
+  /* Toolbar */
+  .toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; pointer-events: none; }
 
+  input[type="text"], input[type="number"], input[type="date"] {
+    width: 100%; padding: 9px 12px; border: 1px solid #e0ddd8;
+    border-radius: 8px; font-size: 18px; color: #1a1a1a;
+    background: #fff; outline: none; transition: border-color 0.15s; font-family: inherit;
+  }
+  input:focus { border-color: #f28324; }
+  input::placeholder { color: #bbb; }
+  #searchInput { padding-left: 36px; }
+
+  select {
+    padding: 9px 12px; border: 1px solid #e0ddd8; border-radius: 8px;
+    font-size: 16px; color: #1a1a1a; background: #fff; outline: none;
+    cursor: pointer; appearance: none; font-family: inherit; transition: border-color 0.15s;
+  }
+  select:focus { border-color: #f28324; }
+
+  textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid #e0ddd8; border-radius: 8px;
+    font-size: 18px; color: #1a1a1a; background: #fff; outline: none;
+    resize: vertical; min-height: 72px; font-family: inherit; transition: border-color 0.15s;
+  }
+  textarea:focus { border-color: #f28324; }
+
+  /* View toggle */
+  .view-toggle { display: flex; border: 1px solid #e0ddd8; border-radius: 8px; overflow: hidden; }
+  .view-btn { padding: 8px 12px; background: #fff; border: none; cursor: pointer; color: #999; font-size: 16px; transition: background 0.15s, color 0.15s; border-right: 1px solid #e0ddd8; }
+  .view-btn:last-child { border-right: none; }
+  .view-btn.active { background: #f28324; color: #fff; }
+
+  .results-header { font-size: 14px; color: #bbb; margin-bottom: 10px; }
+
+  /* Vehicle row */
+  .veh-row {
+    background: #fff; border: 1px solid #ece9e3; border-radius: 8px;
+    padding: 14px 18px; cursor: pointer; transition: border-color 0.15s;
+    display: flex; align-items: center; gap: 14px; margin-bottom: 2px;
+  }
+  .veh-row:hover { border-color: #d4c9b8; }
+  .veh-row.open { border-color: #f28324; box-shadow: 0 0 0 1px #f28324; border-radius: 8px 8px 0 0; margin-bottom: 0; }
+
+  .veh-info { flex: 1; min-width: 0; }
+  .veh-name { font-size: 18px; font-weight: 500; margin-bottom: 3px; }
+  .veh-meta { font-size: 14px; color: #999; display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .status-pill { font-size: 14px; font-weight: 600; padding: 3px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .status-pill.active { background: #e8f5e9; color: #1b5e20; }
+  .status-pill.repair { background: #fff3e0; color: #c65a00; }
+  .status-pill.outofservice { background: #fce4ec; color: #880e4f; }
+
+  /* Grid view */
+  .veh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .veh-card { background: #fff; border: 1px solid #ece9e3; border-radius: 10px; padding: 16px; cursor: pointer; transition: border-color 0.15s; }
+  .veh-card:hover { border-color: #d4c9b8; }
+  .veh-card.open { border-color: #f28324; box-shadow: 0 0 0 1px #f28324; }
+  .card-name { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+  .card-reg { font-size: 14px; color: #999; margin-bottom: 10px; }
+
+  /* Compact table */
+  .veh-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ece9e3; }
+  .veh-table th { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: #bbb; padding: 10px 14px; border-bottom: 1px solid #ece9e3; text-align: left; background: #fafaf8; }
+  .veh-table td { font-size: 16px; padding: 10px 14px; border-bottom: 1px solid #f3f2ef; cursor: pointer; }
+  .veh-table tr:last-child td { border-bottom: none; }
+  .veh-table tr:hover td { background: #fafaf8; }
+  .veh-table tr.open td { background: #fff8f2; }
+
+  /* Detail panel */
+  .detail-panel { background: #fafaf8; border: 1px solid #f28324; border-top: none; box-shadow: 0 0 0 1px #f28324; border-radius: 0 0 8px 8px; margin-bottom: 10px; display: none; }
+  .detail-panel.visible { display: block; }
+
+  .panel-tabs { display: flex; border-bottom: 1px solid #ece9e3; background: #fff; }
+  .panel-tab { padding: 12px 18px; font-size: 16px; font-weight: 500; color: #999; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; font-family: inherit; }
+  .panel-tab.active { color: #f28324; border-bottom-color: #f28324; }
+
+  .panel-content { padding: 20px; display: none; }
+  .panel-content.active { display: block; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; margin-bottom: 5px; }
+  .form-group.full { grid-column: span 2; }
+
+  /* Repair list */
+  .repair-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .repair-item { background: #fff; border: 1px solid #ece9e3; border-radius: 8px; padding: 12px 16px; }
+  .repair-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+  .repair-summary { font-size: 16px; font-weight: 500; flex: 1; }
+  .repair-meta { font-size: 14px; color: #999; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  .repair-cost { font-size: 14px; font-weight: 600; color: #1a1a1a; white-space: nowrap; }
+
+  .repair-status { font-size: 14px; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .repair-status.ok { background: #e8f5e9; color: #1b5e20; }
+  .repair-status.inprogress { background: #fff3e0; color: #c65a00; }
+  .repair-status.completed { background: #e3f2fd; color: #0d47a1; }
+  .repair-status.pending { background: #fce4ec; color: #880e4f; }
+
+  /* Log repair form */
+  .log-repair-section { border-top: 1px solid #ece9e3; padding-top: 16px; margin-top: 4px; }
+  .log-repair-section h4 { font-size: 16px; font-weight: 600; color: #1a1a1a; margin-bottom: 14px; }
+  .no-access { background: #f9f8f6; border: 1px solid #ece9e3; border-radius: 8px; padding: 14px 16px; font-size: 16px; color: #999; text-align: center; }
+
+  /* Actions */
+  .action-row { display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid #ece9e3; }
+  .btn-save { background: #f28324; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: inherit; }
+  .btn-save:hover { background: #d4711e; }
+  .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost-sm { background: none; color: #999; border: 1px solid #e0ddd8; border-radius: 8px; padding: 10px 16px; font-size: 16px; cursor: pointer; font-family: inherit; }
+  .btn-ghost-sm:hover { background: #f3f3f1; }
+
+  /* States */
+  .state-msg { text-align: center; padding: 40px 0; color: #bbb; font-size: 18px; }
+  .state-msg strong { display: block; color: #888; margin-bottom: 4px; font-size: 15px; }
   .loading { display: flex; gap: 5px; justify-content: center; padding: 48px 0; }
   .loading span { width: 7px; height: 7px; border-radius: 50%; background: #f28324; opacity: 0.4; animation: pulse 1.2s infinite; }
   .loading span:nth-child(2) { animation-delay: 0.2s; }
   .loading span:nth-child(3) { animation-delay: 0.4s; }
   @keyframes pulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
 
-  .day-group { margin-bottom: 24px; }
-  .day-label { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #bbb; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-  .day-label.today-label { color: #f28324; }
-  .day-label .today-dot { width: 6px; height: 6px; border-radius: 50%; background: #f28324; }
-
-  .prod-card {
-    background: #fff; border: 1px solid #ece9e3; border-radius: 10px;
-    padding: 16px 18px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
-    margin-bottom: 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
-  }
-  .prod-card:hover { border-color: #d4c9b8; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-  .prod-card-left { flex: 1; min-width: 0; }
-  .prod-card-name { font-size: 18px; font-weight: 500; margin-bottom: 6px; }
-  .prod-card-meta { display: flex; flex-wrap: wrap; gap: 12px; }
-  .prod-card-meta span { font-size: 16px; color: #666; display: flex; align-items: center; gap: 5px; }
-  .prod-time-badge { font-size: 14px; font-weight: 600; padding: 4px 12px; border-radius: 20px; flex-shrink: 0; align-self: flex-start; }
-  .prod-time-badge.tbd { background: #fff3e0; color: #c65a00; }
-  .prod-time-badge.set { background: #e8f5e9; color: #1b5e20; }
-  .prod-time-badge.in-progress { background: #e6f1fb; color: #1a6fc4; }
-  .prod-time-badge.completed { background: #e8f5e9; color: #1b5e20; }
-  .prod-time-badge.cancelled { background: #fce4ec; color: #880e4f; }
-  .empty-day { font-size: 16px; color: #ccc; padding: 12px 0; font-style: italic; }
-
-  /* Month grid */
-  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e8e6e0; border: 1px solid #e8e6e0; border-radius: 10px; overflow: hidden; }
-  .month-day-header { background: #f9f8f6; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; padding: 8px 10px; text-align: center; }
-  .month-day { background: #fff; min-height: 100px; padding: 8px; }
-  .month-day.other-month { background: #fafaf8; }
-  .month-day.today { background: #fff8f2; }
-  .month-day-num { font-size: 13px; font-weight: 600; color: #bbb; margin-bottom: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-  .month-day.today .month-day-num { background: #f28324; color: #fff; font-size: 12px; }
-  .month-day.other-month .month-day-num { color: #ddd; }
-  .month-prod { font-size: 12px; font-weight: 500; padding: 3px 7px; border-radius: 4px; margin-bottom: 3px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 0.1s; }
-  .month-prod:hover { opacity: 0.8; }
-  .month-prod.scheduled { background: #fff3e0; color: #c65a00; }
-  .month-prod.in-progress { background: #e6f1fb; color: #1a6fc4; }
-  .month-prod.completed { background: #e8f5e9; color: #1b5e20; }
-  .month-prod.cancelled { background: #fce4ec; color: #880e4f; }
-  .month-more { font-size: 11px; color: #bbb; padding: 2px 7px; cursor: pointer; }
-  .month-more:hover { color: #f28324; }
-
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 780px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
-  .modal-header { padding: 20px 24px 0; border-bottom: 1px solid #ece9e3; }
-  .modal-title { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
-  .modal-meta { font-size: 16px; color: #999; margin-bottom: 14px; display: flex; gap: 14px; flex-wrap: wrap; }
-  .modal-tabs { display: flex; gap: 0; }
-  .modal-tab { padding: 12px 18px; font-size: 16px; font-weight: 500; color: #999; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; font-family: inherit; }
-  .modal-tab.active { color: #f28324; border-bottom-color: #f28324; }
-  .modal-tab.restricted { display: none; }
-  .modal-tab.restricted.visible { display: block; }
-  .modal-body { padding: 0; }
-  .modal-content { display: none; }
-  .modal-content.active { display: block; }
-  .modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: #999; padding: 4px 8px; margin-top: -4px; }
-  .modal-close:hover { color: #1a1a1a; }
-  .modal-iframe { width: 100%; height: 560px; border: none; display: block; }
-  .edit-frame { width: 100%; height: 700px; border: none; display: block; }
-  .state-msg { text-align: center; padding: 48px 24px; color: #bbb; font-size: 16px; }
-  .state-msg strong { display: block; color: #888; margin-bottom: 4px; font-size: 18px; }
-  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 16px; font-weight: 500; transition: transform 0.25s ease; z-index: 300; white-space: nowrap; }
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 16px; font-weight: 500; transition: transform 0.25s ease; z-index: 100; white-space: nowrap; }
   .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.ok { background: #1b5e20; }
+  .toast.err { background: #b71c1c; }
+
+  @media (max-width: 560px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: span 1; }
+    .veh-grid { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
 <div class="page">
 
-  <div class="cal-header">
-    <div class="cal-title">Production Schedule</div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <button class="add-btn" id="addBtn" onclick="openAddModal()">+ Add Production</button>
-      <div class="cal-nav">
-        <button class="nav-btn" onclick="navigate(-1)">‹</button>
-        <div class="nav-label" id="navLabel">—</div>
-        <button class="nav-btn" onclick="navigate(1)">›</button>
-        <button class="nav-btn" onclick="goToday()" style="font-size:14px;padding:8px 12px;">Today</button>
-      </div>
+  <div class="page-header">
+    <p class="page-title">Fleet Dashboard</p>
+    <p class="page-sub" id="pageSub">Loading…</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total vehicles</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-active">—</div><div class="stat-lbl">Active</div></div>
+    <div class="stat-card warn"><div class="stat-num" id="s-repair">—</div><div class="stat-lbl">In repair</div></div>
+    <div class="stat-card danger"><div class="stat-num" id="s-oos">—</div><div class="stat-lbl">Out of service</div></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search by name, registration, type…" oninput="onSearch()" />
+    </div>
+    <select id="typeFilter" onchange="onSearch()">
+      <option value="">All types</option>
+      <option>Mixer Truck</option>
+      <option>Tipper Truck</option>
+      <option>Pump Truck</option>
+      <option>Wheel Loader</option>
+      <option>Generator</option>
+      <option>KIA / Pickup</option>
+      <option>Aboboya</option>
+      <option>Other</option>
+    </select>
+    <select id="statusFilter" onchange="onSearch()">
+      <option value="">All statuses</option>
+      <option>Active</option>
+      <option>In Repair</option>
+      <option>Out of Service</option>
+    </select>
+    <select id="locationFilter" onchange="onSearch()">
+      <option value="">All locations</option>
+      <option>Teshie</option>
+      <option>Tema</option>
+      <option>Both</option>
+    </select>
+    <div class="view-toggle">
+      <button class="view-btn active" id="vlist" onclick="setView('list')" title="List">☰</button>
+      <button class="view-btn" id="vgrid" onclick="setView('grid')" title="Grid">⊞</button>
+      <button class="view-btn" id="vcompact" onclick="setView('compact')" title="Compact">≡</button>
     </div>
   </div>
 
-  <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
-    <div class="view-tabs" style="margin-bottom:0;">
-      <button class="view-tab active" id="vt-today" onclick="setView('today')">Today</button>
-      <button class="view-tab" id="vt-upcoming" onclick="setView('upcoming')">Upcoming</button>
-      <button class="view-tab" id="vt-month" onclick="setView('month')">Month</button>
-    </div>
-    <div style="position:relative; flex:1; min-width:200px;">
-      <input type="text" id="searchInput" placeholder="Search by name or client…" oninput="onSearch()"
-        style="width:100%; padding:9px 12px; border:1px solid #e0ddd8; border-radius:8px; font-size:16px; font-family:inherit; outline:none;" />
-    </div>
-  </div>
-
-  <div id="calBody">
-    <div class="loading"><span></span><span></span><span></span></div>
-  </div>
-</div>
-
-<!-- Production Modal -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
-  <div class="modal" id="modal">
-    <div class="modal-header">
-      <button class="modal-close" onclick="closeModal()">✕</button>
-      <div class="modal-title" id="modalTitle">—</div>
-      <div class="modal-meta" id="modalMeta"></div>
-      <div class="modal-tabs">
-        <button class="modal-tab active" id="mt-dispatch" onclick="switchModalTab('dispatch')">Dispatch</button>
-        <button class="modal-tab restricted" id="mt-edit" onclick="switchModalTab('edit')">Edit Production</button>
-      </div>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content active" id="mc-dispatch">
-        <iframe class="modal-iframe" id="dispatchFrame" src="about:blank"></iframe>
-      </div>
-      <div class="modal-content" id="mc-edit">
-        <iframe class="edit-frame" id="editFrame" src="about:blank"></iframe>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Add Production Modal -->
-<div class="modal-overlay" id="addModalOverlay" onclick="closeAddModalOnBg(event)">
-  <div class="modal" id="addModal">
-    <div class="modal-header">
-      <button class="modal-close" onclick="closeAddModal()">✕</button>
-      <div class="modal-title">Add Production</div>
-      <div class="modal-tabs">
-        <button class="modal-tab active">New Production</button>
-      </div>
-    </div>
-    <div class="modal-body">
-      <form id="addProductionForm" style="padding:20px; display:flex; flex-direction:column; gap:14px; max-height:70vh; overflow-y:auto;">
-        <div>
-          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Production Name *</label>
-          <input type="text" id="apName" required style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-        </div>
-        <div>
-          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Project Name</label>
-          <input type="text" id="apProject" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-        </div>
-        <div style="display:flex;gap:12px;">
-          <div style="flex:1;">
-            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Volume (m³)</label>
-            <input type="number" step="0.01" id="apVolume" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-          </div>
-          <div style="flex:1;">
-            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Mode of Discharge</label>
-            <select id="apMode" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;">
-              <option value="">—</option>
-              <option value="Manual">Manual</option>
-              <option value="Pump">Pump</option>
-              <option value="TBD">TBD</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Time of Concrete at Site</label>
-          <input type="text" id="apTime" placeholder="e.g. 8:00 AM or TBD" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-        </div>
-        <div>
-          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Client Name</label>
-          <input type="text" id="apClient" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-        </div>
-        <div>
-          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Location</label>
-          <input type="text" id="apLocation" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-        </div>
-        <div>
-          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Date of Supply</label>
-          <input type="date" id="apDate" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-        </div>
-        <div>
-          <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Cast Elements</label>
-          <input type="text" id="apCast" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-        </div>
-        <div style="display:flex;gap:12px;">
-          <div style="flex:1;">
-            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Status</label>
-            <select id="apStatus" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;">
-              <option value="Scheduled">Scheduled</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
-          <div style="flex:1;">
-            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Class of Concrete</label>
-            <input type="text" id="apClass" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-          </div>
-        </div>
-        <div style="display:flex;gap:12px;">
-          <div style="flex:1;">
-            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Producing At</label>
-            <select id="apProducingAt" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;">
-              <option value="">—</option>
-              <option value="Tema">Tema</option>
-              <option value="Teshie">Teshie</option>
-            </select>
-          </div>
-          <div style="flex:1;">
-            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:6px;">Number of Trucks</label>
-            <input type="number" min="1" max="10" id="apTrucks" style="width:100%;padding:9px 10px;border:1px solid #e0ddd8;border-radius:6px;font-size:16px;font-family:inherit;" />
-          </div>
-        </div>
-        <div id="apError" style="color:#d9534f;font-size:14px;display:none;"></div>
-        <button type="submit" id="apSubmitBtn" style="background:#f28324;color:#fff;border:none;padding:11px;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;">Create Production</button>
-      </form>
-    </div>
-  </div>
+  <div id="resultsMeta" class="results-header"></div>
+  <div id="list"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-  const WORKER       = 'https://joalku-production-editer.dholmes127.workers.dev';
-  const PROD_DB      = 'ec892733827e8384a0e10137c50c9d16';
-  const DISPATCH_BASE = 'https://dholmes127.github.io/dispatch-board/?id=';
-  const EDIT_BASE     = 'https://dholmes127.github.io/joalku-production-tool/joalku-schedule.html';
+  // ── Config ────────────────────────────────────────────────────────────────
+  const WORKER      = 'https://joalku-production-editer.dholmes127.workers.dev';
+  const FLEET_DB    = '46c92733827e83a8b3a501b1cce08146';
+  const MAINT_DB    = 'be992733827e83d28b8801e1504c3bcd';
 
-  // Users allowed to add/edit productions AND click dispatch buttons
-  const CALENDAR_ADMIN_USERS = ['daniel_amegah', 'isaac_aidoo'];
-  // Users allowed to click dispatch board buttons
-  const DISPATCH_ADMIN_USERS = ['daniel_amegah', 'isaac_aidoo', 'jude_agyeman_badu'];
+  // WordPress usernames allowed to log repairs
+  const REPAIR_USERS = ['pius', 'pius.joalku']; // add more as needed
 
+  // WordPress usernames allowed to see total repair cost and individual repair costs
+  const FINANCE_USERS = ['kmadziwa', 'alice_madziwa', 'pius', 'pius.joalku']; // Kundai, Alice Madziwa, Pius
+
+  // Check WordPress current user — passed via ?login=... in the iframe URL
+  // since this page is iframed from a different domain (GitHub Pages) and
+  // can't read window.scbCurrentUser directly (cross-origin).
   const urlParams = new URLSearchParams(window.location.search);
   const loginFromUrl = urlParams.get('login');
   const wpUser = loginFromUrl
@@ -267,34 +238,41 @@
     : (typeof window.scbCurrentUser !== 'undefined' && window.scbCurrentUser?.login)
       ? window.scbCurrentUser.login.toLowerCase()
       : null;
+  const canLogRepair = wpUser && REPAIR_USERS.includes(wpUser);
+  const canViewCosts = wpUser && FINANCE_USERS.includes(wpUser);
 
-  const canEditProduction = wpUser && CALENDAR_ADMIN_USERS.includes(wpUser);
-  const canDispatch       = wpUser && DISPATCH_ADMIN_USERS.includes(wpUser);
-
-  if (canEditProduction) document.getElementById('addBtn').classList.add('visible');
-
-  let allProductions = [];
-  let currentView = 'today';
-  let currentDate = new Date();
-  currentDate.setHours(0,0,0,0);
-
-  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let allVehicles = [];
+  let allRepairs  = [];
+  let openId      = null;
+  let activeTab   = {};
+  let currentView = 'list';
+  let searchTimer = null;
 
   window.onload = load;
 
   async function load() {
+    document.getElementById('list').innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
     try {
-      const data = await queryDB([{property:'Date of Supply',direction:'ascending'}]);
-      allProductions = data.results;
-      render();
+      const [fleetData, maintData] = await Promise.all([
+        queryDB(FLEET_DB, null, [{property:'Equipment Name', direction:'ascending'}]),
+        queryDB(MAINT_DB, null, [{property:'Date', direction:'descending'}])
+      ]);
+      allVehicles = fleetData.results;
+      allRepairs  = maintData.results;
+      updateStats();
+      document.getElementById('pageSub').textContent = `${allVehicles.length} vehicles · ${allRepairs.length} repair records`;
+      applyFiltersAndRender();
     } catch(e) {
-      document.getElementById('calBody').innerHTML = `<div class="state-msg"><strong>Could not connect</strong>${e.message}</div>`;
+      document.getElementById('pageSub').textContent = '';
+      document.getElementById('list').innerHTML = `<div class="state-msg"><strong>Could not connect</strong>${e.message}</div>`;
     }
   }
 
-  async function queryDB(sorts) {
-    const body = { page_size: 100, sorts };
-    const r = await fetch(`${WORKER}/v1/databases/${PROD_DB}/query`, {
+  async function queryDB(dbId, filter, sorts) {
+    const body = { page_size: 100 };
+    if (filter) body.filter = filter;
+    if (sorts) body.sorts = sorts;
+    const r = await fetch(`${WORKER}/v1/databases/${dbId}/query`, {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
     });
     if (!r.ok) { const e = await r.json(); throw new Error(e.message||'API error'); }
@@ -306,395 +284,464 @@
     if (!p) return '—';
     if (type==='title')     return p.title?.[0]?.plain_text||'—';
     if (type==='rich_text') return p.rich_text?.[0]?.plain_text||'—';
-    if (type==='date')      return p.date?.start||'—';
     if (type==='select')    return p.select?.name||'—';
-    if (type==='number')    return p.number!=null ? p.number : '—';
+    if (type==='date')      return p.date?.start||'—';
+    if (type==='number')    return p.number??null;
+    if (type==='rollup_num') return p.rollup?.number??null;
     return '—';
   }
 
-  function getDisplayName(p) {
-    const project = getProp(p,'Project Name');
-    if (project && project !== '—') return project;
-    const client = getProp(p,'Client Name');
-    if (client && client !== '—') return client;
-    return getProp(p,'Production Name','title');
-  }
-
-  function parseTime(timeStr) {
-    if (!timeStr || timeStr === '—' || timeStr === 'TBD') return 9999;
-    const t = timeStr.toUpperCase().replace('.', ':');
-    const match = t.match(/(\d+):?(\d*)\s*(AM|PM)?/);
-    if (!match) return 9999;
-    let h = parseInt(match[1]);
-    const m = parseInt(match[2] || '0');
-    const meridiem = match[3];
-    if (meridiem === 'PM' && h !== 12) h += 12;
-    if (meridiem === 'AM' && h === 12) h = 0;
-    return h * 60 + m;
-  }
-
-  function sortByTime(prods) {
-    return [...prods].sort((a, b) => {
-      const ta = parseTime(getProp(a,'Time of Concrete at Site'));
-      const tb = parseTime(getProp(b,'Time of Concrete at Site'));
-      return ta - tb;
+  function getRepairsFor(vehicleId) {
+    return allRepairs.filter(r => {
+      const rel = r.properties['Fleet Entry']?.relation || [];
+      return rel.some(x => x.id === vehicleId);
     });
   }
 
-  function getProdsForDate(dateStr) {
-    const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
-    let prods = allProductions.filter(p => getProp(p,'Date of Supply','date') === dateStr);
-    if (q) {
-      prods = prods.filter(p =>
-        getDisplayName(p).toLowerCase().includes(q) ||
-        getProp(p,'Client Name').toLowerCase().includes(q) ||
-        getProp(p,'Production Name','title').toLowerCase().includes(q)
-      );
+  function updateStats() {
+    const active = allVehicles.filter(v => getProp(v,'Status','select')==='Active').length;
+    const repair = allVehicles.filter(v => getProp(v,'Status','select')==='In Repair').length;
+    const oos    = allVehicles.filter(v => getProp(v,'Status','select')==='Out of Service').length;
+    document.getElementById('s-total').textContent = allVehicles.length;
+    document.getElementById('s-active').textContent = active;
+    document.getElementById('s-repair').textContent = repair;
+    document.getElementById('s-oos').textContent = oos;
+  }
+
+  function fmtDate(d) {
+    if (!d||d==='—') return '—';
+    return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  }
+
+  function statusClass(s) {
+    if (s==='Active') return 'active';
+    if (s==='In Repair') return 'repair';
+    if (s==='Out of Service') return 'outofservice';
+    return '';
+  }
+
+  function repairStatusClass(s) {
+    if (s==='OK') return 'ok';
+    if (s==='In Progress') return 'inprogress';
+    if (s==='Completed') return 'completed';
+    if (s==='Pending') return 'pending';
+    return '';
+  }
+
+  function fmtCost(n) { return n != null ? `₵${n.toLocaleString()}` : '—'; }
+
+  function getFilteredVehicles() {
+    const q      = document.getElementById('searchInput').value.trim().toLowerCase();
+    const type   = document.getElementById('typeFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const loc    = document.getElementById('locationFilter').value;
+    let filtered = allVehicles;
+    if (type)   filtered = filtered.filter(v => getProp(v,'Type','select')===type);
+    if (status) filtered = filtered.filter(v => getProp(v,'Status','select')===status);
+    if (loc)    filtered = filtered.filter(v => getProp(v,'Location','select')===loc);
+    if (q)      filtered = filtered.filter(v =>
+      getProp(v,'Equipment Name','title').toLowerCase().includes(q) ||
+      getProp(v,'Registration / ID','rich_text').toLowerCase().includes(q) ||
+      getProp(v,'Type','select').toLowerCase().includes(q)
+    );
+    return filtered;
+  }
+
+  function applyFiltersAndRender() {
+    const filtered = getFilteredVehicles();
+    document.getElementById('resultsMeta').textContent = `${filtered.length} vehicle${filtered.length!==1?'s':''}`;
+    if (currentView==='list') renderList(filtered);
+    else if (currentView==='grid') renderGrid(filtered);
+    else renderCompact(filtered);
+  }
+
+  function onSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(applyFiltersAndRender, 200); }
+  function setView(v) {
+    currentView = v; openId = null;
+    ['list','grid','compact'].forEach(x => document.getElementById('v'+x).classList.toggle('active', x===v));
+    applyFiltersAndRender();
+  }
+
+  // ── LIST VIEW ──────────────────────────────────────────────────────────────
+  function renderList(vehicles) {
+    const list = document.getElementById('list');
+    if (!vehicles.length) { list.innerHTML = '<div class="state-msg"><strong>No vehicles found</strong></div>'; return; }
+    list.innerHTML = '';
+    vehicles.forEach(v => {
+      const id     = v.id;
+      const name   = getProp(v,'Equipment Name','title');
+      const reg    = getProp(v,'Registration / ID','rich_text');
+      const type   = getProp(v,'Type','select');
+      const status = getProp(v,'Status','select');
+      const loc    = getProp(v,'Location','select');
+      const repairs= getRepairsFor(id);
+
+      const row = document.createElement('div');
+      row.className = 'veh-row' + (openId===id?' open':'');
+      row.dataset.id = id;
+      row.innerHTML = `
+        <div class="veh-info">
+          <div class="veh-name">${name}</div>
+          <div class="veh-meta">
+            ${reg!=='—'?`<span>${reg}</span>`:''}
+            ${type!=='—'?`<span>${type}</span>`:''}
+            ${loc!=='—'?`<span>${loc}</span>`:''}
+            <span>${repairs.length} repair${repairs.length!==1?'s':''}</span>
+          </div>
+        </div>
+        <div class="status-pill ${statusClass(status)}">${status}</div>
+      `;
+      row.onclick = () => toggleDetail(id, v);
+      list.appendChild(row);
+      list.appendChild(buildDetailPanel(id, v));
+    });
+  }
+
+  // ── GRID VIEW ──────────────────────────────────────────────────────────────
+  function renderGrid(vehicles) {
+    const list = document.getElementById('list');
+    if (!vehicles.length) { list.innerHTML = '<div class="state-msg"><strong>No vehicles found</strong></div>'; return; }
+    list.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'veh-grid';
+    vehicles.forEach(v => {
+      const id     = v.id;
+      const name   = getProp(v,'Equipment Name','title');
+      const reg    = getProp(v,'Registration / ID','rich_text');
+      const status = getProp(v,'Status','select');
+      const card = document.createElement('div');
+      card.className = 'veh-card' + (openId===id?' open':'');
+      card.dataset.id = id;
+      card.innerHTML = `
+        <div class="card-name">${name}</div>
+        <div class="card-reg">${reg!=='—'?reg:''}</div>
+        <div class="status-pill ${statusClass(status)}">${status}</div>
+      `;
+      card.onclick = () => toggleDetailGrid(id, v, grid);
+      grid.appendChild(card);
+    });
+    list.appendChild(grid);
+    if (openId) {
+      const panel = buildDetailPanel(openId, vehicles.find(v=>v.id===openId));
+      if (panel) { panel.style.borderRadius='8px'; panel.style.borderTop='1px solid #f28324'; panel.classList.add('visible'); list.appendChild(panel); }
     }
-    return prods;
   }
 
-  function onSearch() { render(); }
-  function dateStr(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,'0');
-    const day = String(d.getDate()).padStart(2,'0');
-    return `${y}-${m}-${day}`;
+  function toggleDetailGrid(id, v, grid) {
+    const list = document.getElementById('list');
+    list.querySelectorAll('.detail-panel').forEach(p=>p.remove());
+    grid.querySelectorAll('.veh-card').forEach(c=>c.classList.remove('open'));
+    if (openId===id) { openId=null; return; }
+    openId=id;
+    grid.querySelectorAll('.veh-card').forEach(c=>{ if(c.dataset.id===id) c.classList.add('open'); });
+    const panel = buildDetailPanel(id, v);
+    panel.style.borderRadius='8px'; panel.style.borderTop='1px solid #f28324'; panel.classList.add('visible');
+    list.appendChild(panel);
+    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
-  function fmtDayLabel(d) {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const diff = Math.round((d - today) / 86400000);
-    if (diff === 0) return 'Today';
-    if (diff === 1) return 'Tomorrow';
-    return d.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'});
+  // ── COMPACT VIEW ────────────────────────────────────────────────────────────
+  function renderCompact(vehicles) {
+    const list = document.getElementById('list');
+    if (!vehicles.length) { list.innerHTML = '<div class="state-msg"><strong>No vehicles found</strong></div>'; return; }
+    list.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'veh-table';
+    table.innerHTML = `<thead><tr><th>Name</th><th>Registration</th><th>Type</th><th>Location</th><th>Status</th><th>Repairs</th></tr></thead><tbody></tbody>`;
+    const tbody = table.querySelector('tbody');
+    vehicles.forEach(v => {
+      const id = v.id;
+      const tr = document.createElement('tr');
+      tr.className = openId===id?'open':'';
+      tr.dataset.id = id;
+      tr.innerHTML = `
+        <td><strong>${getProp(v,'Equipment Name','title')}</strong></td>
+        <td>${getProp(v,'Registration / ID','rich_text')}</td>
+        <td>${getProp(v,'Type','select')}</td>
+        <td>${getProp(v,'Location','select')}</td>
+        <td>${getProp(v,'Status','select')}</td>
+        <td>${getRepairsFor(id).length}</td>
+      `;
+      tr.onclick = () => { openId = openId===id?null:id; renderCompact(getFilteredVehicles()); };
+      tbody.appendChild(tr);
+      if (openId===id) {
+        const panelRow = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan=6; td.style.padding='0';
+        const panel = buildDetailPanel(id, v);
+        panel.style.cssText='border-radius:0;border:none;box-shadow:none;border-top:1px solid #f28324;';
+        panel.classList.add('visible');
+        td.appendChild(panel); panelRow.appendChild(td); tbody.appendChild(panelRow);
+      }
+    });
+    list.appendChild(table);
   }
 
-  function fmtShortDate(d) {
-    return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-  }
+  // ── DETAIL PANEL ───────────────────────────────────────────────────────────
+  function buildDetailPanel(id, v) {
+    const name   = getProp(v,'Equipment Name','title');
+    const reg    = getProp(v,'Registration / ID','rich_text');
+    const type   = getProp(v,'Type','select');
+    const status = getProp(v,'Status','select');
+    const loc    = getProp(v,'Location','select');
+    const notes  = getProp(v,'Notes','rich_text');
+    const repairs= getRepairsFor(id);
+    const tab    = activeTab[id] || 'overview';
 
-  function prodCard(p) {
-    const id          = p.id;
-    const name        = getDisplayName(p);
-    const time        = getProp(p,'Time of Concrete at Site');
-    const location    = getProp(p,'Location');
-    const producingAt = getProp(p,'Producing At','select');
-    const status      = getProp(p,'Status','select');
-    const isTbd       = time==='TBD'||time==='—';
+    const totalCost = repairs.reduce((sum,r) => sum + (getProp(r,'Cost (GHS)','number')||0), 0);
 
-    // Time pill: shows status if In Progress/Completed/Cancelled, otherwise shows time/TBD
-    let pillText, pillClass;
-    if (status === 'In Progress') {
-      pillText = 'In Progress'; pillClass = 'in-progress';
-    } else if (status === 'Completed') {
-      pillText = 'Completed'; pillClass = 'completed';
-    } else if (status === 'Cancelled') {
-      pillText = 'Cancelled'; pillClass = 'cancelled';
-    } else {
-      pillText = isTbd ? 'TBD' : time; pillClass = isTbd ? 'tbd' : 'set';
-    }
+    const repairsHtml = repairs.length ? repairs.map(r => {
+      const rs  = getProp(r,'Repair Summary','title');
+      const rd  = getProp(r,'Date','date');
+      const rw  = getProp(r,'What Was Repaired','rich_text');
+      const rp  = getProp(r,'Parts Used','rich_text');
+      const rc  = getProp(r,'Cost (GHS)','number');
+      const rst = getProp(r,'Status','select');
+      const rb  = getProp(r,'Reported By','select');
+      return `<div class="repair-item">
+        <div class="repair-top">
+          <div class="repair-summary">${rs}</div>
+          <div class="repair-status ${repairStatusClass(rst)}">${rst}</div>
+        </div>
+        <div class="repair-meta">
+          <span>📅 ${fmtDate(rd)}</span>
+          ${rw!=='—'?`<span>🔧 ${rw}</span>`:''}
+          ${rp!=='—'?`<span>🔩 ${rp}</span>`:''}
+          ${rb!=='—'?`<span>👤 ${rb}</span>`:''}
+        </div>
+        ${(canViewCosts && rc!=null)?`<div class="repair-cost" style="margin-top:6px">${fmtCost(rc)}</div>`:''}
+      </div>`;
+    }).join('') : '<div class="state-msg" style="padding:20px 0"><strong>No repairs logged</strong></div>';
 
-    return `<div class="prod-card" onclick="openProduction('${id}')">
-      <div class="prod-card-left">
-        <div class="prod-card-name">${name}</div>
-        <div class="prod-card-meta">
-          ${producingAt!=='—'?`<span>🏭 ${producingAt}</span>`:''}
-          ${location!=='—'?`<span>📍 ${location}</span>`:''}
+    const logRepairHtml = canLogRepair ? `
+      <div class="log-repair-section">
+        <h4>Log a repair</h4>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Repair Summary</label>
+            <input type="text" id="nr-summary-${id}" placeholder="e.g. Helper wheel repairs" />
+          </div>
+          <div class="form-group full">
+            <label>What Was Repaired</label>
+            <textarea id="nr-what-${id}" placeholder="Describe what was repaired…"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Parts Used</label>
+            <input type="text" id="nr-parts-${id}" placeholder="e.g. Hub seal, bearings" />
+          </div>
+          <div class="form-group">
+            <label>Supplier</label>
+            <input type="text" id="nr-supplier-${id}" placeholder="Supplier name" />
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="nr-date-${id}" value="${new Date().toISOString().slice(0,10)}" />
+          </div>
+          <div class="form-group">
+            <label>Cost (GHS)</label>
+            <input type="number" id="nr-cost-${id}" placeholder="0.00" />
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="nr-status-${id}">
+              <option>Pending</option>
+              <option>In Progress</option>
+              <option>Completed</option>
+              <option>OK</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Month</label>
+            <select id="nr-month-${id}">
+              ${['Oct 2025','Nov 2025','Dec 2025','Jan 2026','Feb 2026','Mar 2026','Apr 2026','May 2026','Jun 2026'].map(m=>`<option ${m===getCurrentMonth()?'selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="btn-save" id="btn-repair-${id}" onclick="logRepair('${id}','${name}',event)">Log repair</button>
+          <button class="btn-ghost-sm" onclick="closeDetail(event)">Cancel</button>
         </div>
       </div>
-      <div class="prod-time-badge ${pillClass}">${pillText}</div>
-    </div>`;
+    ` : `<div class="no-access">You don't have permission to log repairs.</div>`;
+
+    const detail = document.createElement('div');
+    detail.className = 'detail-panel';
+    detail.id = 'detail-'+id;
+    detail.innerHTML = `
+      <div class="panel-tabs">
+        <button class="panel-tab ${tab==='overview'?'active':''}" onclick="switchTab('${id}','overview',event)">Overview</button>
+        <button class="panel-tab ${tab==='repairs'?'active':''}" onclick="switchTab('${id}','repairs',event)">Repairs (${repairs.length})</button>
+        ${canLogRepair ? `<button class="panel-tab ${tab==='log'?'active':''}" onclick="switchTab('${id}','log',event)">Log Repair</button>` : ''}
+      </div>
+
+      <div class="panel-content ${tab==='overview'?'active':''}" id="tab-overview-${id}">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Equipment Name</label>
+            <input type="text" id="f-name-${id}" value="${name!=='—'?name:''}" />
+          </div>
+          <div class="form-group">
+            <label>Registration / ID</label>
+            <input type="text" id="f-reg-${id}" value="${reg!=='—'?reg:''}" />
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="f-type-${id}">
+              <option value="">— select —</option>
+              ${['Mixer Truck','Tipper Truck','Pump Truck','Wheel Loader','Generator','KIA / Pickup','Aboboya','Other'].map(t=>`<option ${type===t?'selected':''}>${t}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="f-status-${id}">
+              <option value="">— select —</option>
+              ${['Active','In Repair','Out of Service'].map(s=>`<option ${status===s?'selected':''}>${s}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <select id="f-loc-${id}">
+              <option value="">— select —</option>
+              ${['Teshie','Tema','Both'].map(l=>`<option ${loc===l?'selected':''}>${l}</option>`).join('')}
+            </select>
+          </div>
+          ${canViewCosts ? `<div class="form-group">
+            <label>Total repair cost</label>
+            <input type="text" value="${fmtCost(totalCost)}" disabled style="background:#f9f8f6;color:#999" />
+          </div>` : ''}
+          <div class="form-group full">
+            <label>Notes</label>
+            <textarea id="f-notes-${id}">${notes!=='—'?notes:''}</textarea>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="btn-save" id="btn-overview-${id}" onclick="saveOverview('${id}',event)">Save changes</button>
+          <button class="btn-ghost-sm" onclick="closeDetail(event)">Cancel</button>
+        </div>
+      </div>
+
+      <div class="panel-content ${tab==='repairs'?'active':''}" id="tab-repairs-${id}">
+        <div class="repair-list">${repairsHtml}</div>
+        ${canLogRepair ? `<button class="btn-save" style="margin-top:4px" onclick="switchTab('${id}','log',this.closest('.detail-panel').querySelector('.panel-tab:last-child') || {classList:{add:()=>{},remove:()=>{}}},event)">+ Log new repair</button>` : ''}
+      </div>
+
+      <div class="panel-content ${tab==='log'?'active':''}" id="tab-log-${id}">
+        ${logRepairHtml}
+      </div>
+    `;
+    return detail;
   }
 
-  function renderToday() {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const ds = dateStr(today);
-    const prods = sortByTime(getProdsForDate(ds));
-    document.getElementById('navLabel').textContent = today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
-    const cal = document.getElementById('calBody');
-    cal.innerHTML = prods.length
-      ? prods.map(p => prodCard(p)).join('')
-      : '<div class="state-msg"><strong>No productions today</strong></div>';
+  function getCurrentMonth() {
+    const now = new Date();
+    return now.toLocaleDateString('en-GB',{month:'short',year:'numeric'}).replace(' ','/').replace('/',' ');
   }
 
-  function renderUpcoming() {
-    const cal = document.getElementById('calBody');
-    cal.innerHTML = '';
-    const today = new Date(); today.setHours(0,0,0,0);
-    document.getElementById('navLabel').textContent = 'Next 7 days';
-
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today); d.setDate(today.getDate() + i);
-      const ds = dateStr(d);
-      const prods = sortByTime(getProdsForDate(ds));
-      const isToday = i === 0;
-
-      const group = document.createElement('div');
-      group.className = 'day-group';
-      const label = document.createElement('div');
-      label.className = 'day-label' + (isToday?' today-label':'');
-      label.innerHTML = isToday ? `<span class="today-dot"></span> TODAY — ${fmtShortDate(d)}` : fmtDayLabel(d).toUpperCase();
-      group.appendChild(label);
-
-      if (prods.length) {
-        group.innerHTML += prods.map(p => prodCard(p)).join('');
-      } else {
-        group.innerHTML += `<div class="empty-day">No productions</div>`;
-      }
-      cal.appendChild(group);
-    }
+  function toggleDetail(id, v) {
+    const list = document.getElementById('list');
+    if (openId===id) { openId=null; document.querySelectorAll('.veh-row').forEach(r=>r.classList.remove('open')); document.querySelectorAll('.detail-panel').forEach(d=>d.remove()); return; }
+    document.querySelectorAll('.veh-row').forEach(r=>r.classList.remove('open'));
+    document.querySelectorAll('.detail-panel').forEach(d=>d.remove());
+    openId=id;
+    const row = list.querySelector(`.veh-row[data-id="${id}"]`);
+    if (row) row.classList.add('open');
+    const panel = buildDetailPanel(id, v);
+    panel.classList.add('visible');
+    row.insertAdjacentElement('afterend', panel);
+    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
-  function renderSearchResults(q) {
-    const cal = document.getElementById('calBody');
-    const matches = allProductions.filter(p =>
-      getProp(p,'Production Name','title').toLowerCase().includes(q) ||
-      getProp(p,'Client Name').toLowerCase().includes(q)
-    ).sort((a,b) => {
-      const da = getProp(a,'Date of Supply','date');
-      const db = getProp(b,'Date of Supply','date');
-      return (db||'').localeCompare(da||'');
-    });
-
-    document.getElementById('navLabel').textContent = `Search results for "${q}"`;
-    cal.innerHTML = '';
-
-    if (!matches.length) {
-      cal.innerHTML = '<div class="state-msg"><strong>No productions found</strong></div>';
-      return;
-    }
-
-    const group = document.createElement('div');
-    group.className = 'day-group';
-    group.innerHTML = matches.map(p => {
-      const d = getProp(p,'Date of Supply','date');
-      const dateLabel = d !== '—' ? new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'No date';
-      return `<div class="search-date-label" style="font-size:11px;color:#999;margin:10px 0 4px;">${dateLabel}</div>${prodCard(p)}`;
-    }).join('');
-    cal.appendChild(group);
+  function closeDetail(e) {
+    e.stopPropagation(); openId=null;
+    document.querySelectorAll('.veh-row,.veh-card').forEach(r=>r.classList.remove('open'));
+    document.querySelectorAll('.detail-panel').forEach(d=>d.remove());
   }
 
-  function renderMonth() {
-    const cal = document.getElementById('calBody');
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    document.getElementById('navLabel').textContent = `${MONTH_NAMES[month]} ${year}`;
-
-    const today = new Date(); today.setHours(0,0,0,0);
-    const firstDay = new Date(year, month, 1);
-    const lastDay  = new Date(year, month+1, 0);
-    const startDow = firstDay.getDay();
-    const startOffset = startDow === 0 ? 6 : startDow - 1; // Monday start
-
-    let html = '<div class="month-grid">';
-    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => { html += `<div class="month-day-header">${d}</div>`; });
-
-    for (let i = 0; i < startOffset; i++) {
-      const pd = new Date(year, month, -startOffset + i + 1);
-      html += `<div class="month-day other-month"><div class="month-day-num">${pd.getDate()}</div></div>`;
-    }
-
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      const wd = new Date(year, month, d);
-      const ds = dateStr(wd);
-      const isToday = ds === dateStr(today);
-      const prods = sortByTime(allProductions.filter(p => getProp(p,'Date of Supply','date') === ds));
-      let prodsHtml = '';
-      prods.slice(0,3).forEach(p => {
-        const name = getDisplayName(p);
-        const status = getProp(p,'Status','select');
-        const cls = status==='In Progress'?'in-progress':status==='Completed'?'completed':status==='Cancelled'?'cancelled':'scheduled';
-        prodsHtml += `<div class="month-prod ${cls}" onclick="event.stopPropagation();openProduction('${p.id}')" title="${name}">${name}</div>`;
-      });
-      if (prods.length > 3) prodsHtml += `<div class="month-more">+${prods.length-3} more</div>`;
-      html += `<div class="month-day${isToday?' today':''}"><div class="month-day-num">${d}</div>${prodsHtml}</div>`;
-    }
-
-    const totalCells = startOffset + lastDay.getDate();
-    const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-    for (let i = 1; i <= remaining; i++) {
-      html += `<div class="month-day other-month"><div class="month-day-num">${i}</div></div>`;
-    }
-    html += '</div>';
-    cal.innerHTML = html;
+  function switchTab(id, tab, e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    activeTab[id] = tab;
+    const panel = document.getElementById('detail-'+id);
+    if (!panel) return;
+    panel.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
+    panel.querySelectorAll('.panel-content').forEach(c=>c.classList.remove('active'));
+    const btn = panel.querySelector(`.panel-tab:nth-child(${tab==='overview'?1:tab==='repairs'?2:3})`);
+    if (btn) btn.classList.add('active');
+    const content = document.getElementById(`tab-${tab}-${id}`);
+    if (content) content.classList.add('active');
   }
 
-  function render() {
-    const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
-    if (q) { renderSearchResults(q); return; }
-    if (currentView==='today') renderToday();
-    else if (currentView==='upcoming') renderUpcoming();
-    else renderMonth();
-  }
-
-  function setView(v) {
-    currentView = v;
-    ['today','upcoming','month'].forEach(x => {
-      const el = document.getElementById('vt-'+x);
-      if (el) el.classList.toggle('active', x===v);
-    });
-    currentDate = new Date(); currentDate.setHours(0,0,0,0);
-    render();
-  }
-
-  function navigate(dir) {
-    if (currentView==='today') {
-      currentDate.setDate(currentDate.getDate()+dir);
-      const cal = document.getElementById('calBody');
-      const ds = dateStr(currentDate);
-      const prods = sortByTime(getProdsForDate(ds));
-      document.getElementById('navLabel').textContent = currentDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
-      cal.innerHTML = prods.length
-        ? prods.map(p => prodCard(p)).join('')
-        : '<div class="state-msg"><strong>No productions</strong></div>';
-    } else if (currentView==='month') {
-      currentDate.setMonth(currentDate.getMonth() + dir);
-      renderMonth();
-    }
-  }
-
-  function goToday() {
-    currentDate = new Date(); currentDate.setHours(0,0,0,0);
-    render();
-  }
-
-  function openProduction(pageId) {
-    const p = allProductions.find(x => x.id === pageId);
-    if (!p) return;
-
-    const name     = getProp(p,'Production Name','title');
-    const client   = getProp(p,'Client Name');
-    const time     = getProp(p,'Time of Concrete at Site');
-    const location = getProp(p,'Location');
-    const date     = getProp(p,'Date of Supply','date');
-
-    document.getElementById('modalTitle').textContent = name;
-    const metaParts = [];
-    if (date!=='—') metaParts.push(new Date(date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'long',year:'numeric'}));
-    if (client!=='—') metaParts.push('👤 '+client);
-    if (time!=='—') metaParts.push('🕐 '+time);
-    if (location!=='—') metaParts.push('📍 '+location);
-    document.getElementById('modalMeta').innerHTML = metaParts.map(m=>`<span>${m}</span>`).join('');
-
-    // Pass both ?id= and ?login= to dispatch board so it can gate button clicks
-    const cleanId = pageId.replace(/-/g,'');
-    const dispatchUrl = `${DISPATCH_BASE}${cleanId}&login=${encodeURIComponent(wpUser || '')}`;
-    document.getElementById('dispatchFrame').src = dispatchUrl;
-
-    // Show/hide edit tab for admins
-    const editTab = document.getElementById('mt-edit');
-    if (canEditProduction) {
-      editTab.classList.add('visible');
-      document.getElementById('editFrame').src = `${EDIT_BASE}?id=${cleanId}`;
-    } else {
-      editTab.classList.remove('visible');
-    }
-
-    switchModalTab('dispatch');
-    document.getElementById('modalOverlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('open');
-    document.getElementById('dispatchFrame').src = 'about:blank';
-    document.getElementById('editFrame').src = 'about:blank';
-    document.body.style.overflow = '';
-  }
-
-  function closeModalOnBg(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
-
-  function switchModalTab(tab) {
-    ['dispatch','edit'].forEach(t => {
-      document.getElementById('mt-'+t)?.classList.toggle('active', t===tab);
-      document.getElementById('mc-'+t)?.classList.toggle('active', t===tab);
-    });
-  }
-
-  function openAddModal() {
-    if (!canEditProduction) return;
-    document.getElementById('addProductionForm').reset();
-    document.getElementById('apError').style.display = 'none';
-    document.getElementById('addModalOverlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeAddModal() {
-    document.getElementById('addModalOverlay').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  function closeAddModalOnBg(e) { if (e.target === document.getElementById('addModalOverlay')) closeAddModal(); }
-
-  document.getElementById('addProductionForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    if (!canEditProduction) return;
-
-    const errEl = document.getElementById('apError');
-    errEl.style.display = 'none';
-
-    const name = document.getElementById('apName').value.trim();
-    const client = document.getElementById('apClient').value.trim();
-
-    if (!client) {
-      errEl.textContent = 'Client Name is required.';
-      errEl.style.display = 'block';
-      return;
-    }
-
-    // Page title in Notion = Client Name; Project Name used for display fallback on calendar
-    const properties = {
-      'Production Name': { title: [{ text: { content: client } }] }
+  async function saveOverview(id, e) {
+    e.stopPropagation();
+    const btn = document.getElementById('btn-overview-'+id);
+    btn.disabled=true; btn.textContent='Saving…';
+    const name   = document.getElementById('f-name-'+id).value.trim();
+    const reg    = document.getElementById('f-reg-'+id).value.trim();
+    const type   = document.getElementById('f-type-'+id).value;
+    const status = document.getElementById('f-status-'+id).value;
+    const loc    = document.getElementById('f-loc-'+id).value;
+    const notes  = document.getElementById('f-notes-'+id).value.trim();
+    const props = {
+      'Equipment Name': { title: [{ type:'text', text:{ content:name } }] },
+      'Registration / ID': { rich_text: [{ type:'text', text:{ content:reg } }] },
+      'Notes': { rich_text: [{ type:'text', text:{ content:notes } }] },
     };
-    const project = document.getElementById('apProject').value.trim();
-    if (project) properties['Project Name'] = { rich_text: [{ text: { content: project } }] };
-    const volume = document.getElementById('apVolume').value;
-    if (volume !== '') properties['Volume (m³)'] = { number: Number(volume) };
-    const mode = document.getElementById('apMode').value;
-    if (mode) properties['Mode of Discharge'] = { select: { name: mode } };
-    const timeVal = document.getElementById('apTime').value.trim();
-    if (timeVal) properties['Time of Concrete at Site'] = { rich_text: [{ text: { content: timeVal } }] };
-    if (client) properties['Client Name'] = { rich_text: [{ text: { content: client } }] };
-    const location = document.getElementById('apLocation').value.trim();
-    if (location) properties['Location'] = { rich_text: [{ text: { content: location } }] };
-    const dateVal = document.getElementById('apDate').value;
-    if (dateVal) properties['Date of Supply'] = { date: { start: dateVal } };
-    const cast = document.getElementById('apCast').value.trim();
-    if (cast) properties['Cast Elements'] = { rich_text: [{ text: { content: cast } }] };
-    const classOf = document.getElementById('apClass').value.trim();
-    if (classOf) properties['Class of Concrete'] = { rich_text: [{ text: { content: classOf } }] };
-    const producingAt = document.getElementById('apProducingAt').value;
-    if (producingAt) properties['Producing At'] = { select: { name: producingAt } };
-    const trucks = document.getElementById('apTrucks').value;
-    if (trucks !== '') properties['Number of Trucks'] = { number: Number(trucks) };
+    if (type)   props['Type']     = { select:{ name:type } };
+    if (status) props['Status']   = { select:{ name:status } };
+    if (loc)    props['Location'] = { select:{ name:loc } };
+    try {
+      const r = await fetch(`${WORKER}/v1/pages/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({properties:props}) });
+      if (!r.ok) throw new Error();
+      toast('Vehicle updated','ok');
+      btn.textContent='Saved ✓';
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='Save changes'; },2000);
+      openId=null; load();
+    } catch { toast('Failed to save','err'); btn.disabled=false; btn.textContent='Save changes'; }
+  }
 
-    properties['Status'] = { select: { name: document.getElementById('apStatus').value } };
+  async function logRepair(vehicleId, vehicleName, e) {
+    e.stopPropagation();
+    if (!canLogRepair) { toast('Not authorised','err'); return; }
+    const btn = document.getElementById('btn-repair-'+vehicleId);
+    const summary  = document.getElementById('nr-summary-'+vehicleId).value.trim();
+    if (!summary) { toast('Enter a repair summary','err'); return; }
+    const what     = document.getElementById('nr-what-'+vehicleId).value.trim();
+    const parts    = document.getElementById('nr-parts-'+vehicleId).value.trim();
+    const supplier = document.getElementById('nr-supplier-'+vehicleId).value.trim();
+    const date     = document.getElementById('nr-date-'+vehicleId).value;
+    const cost     = parseFloat(document.getElementById('nr-cost-'+vehicleId).value)||null;
+    const status   = document.getElementById('nr-status-'+vehicleId).value;
+    const month    = document.getElementById('nr-month-'+vehicleId).value;
 
-    const btn = document.getElementById('apSubmitBtn');
-    btn.disabled = true;
-    btn.textContent = 'Creating…';
+    btn.disabled=true; btn.textContent='Logging…';
+
+    const props = {
+      'Repair Summary': { title: [{ type:'text', text:{ content:summary } }] },
+      'Equipment': { rich_text: [{ type:'text', text:{ content:vehicleName } }] },
+      'What Was Repaired': { rich_text: [{ type:'text', text:{ content:what } }] },
+      'Parts Used': { rich_text: [{ type:'text', text:{ content:parts } }] },
+      'Supplier': { rich_text: [{ type:'text', text:{ content:supplier } }] },
+      'Fleet Entry': { relation: [{ id: vehicleId }] },
+    };
+    if (date)   props['Date']   = { date:{ start:date } };
+    if (cost)   props['Cost (GHS)'] = { number:cost };
+    if (status) props['Status'] = { select:{ name:status } };
+    if (month)  props['Month']  = { select:{ name:month } };
+
+    // Set Reported By to Pius
+    props['Reported By'] = { select:{ name:'Pius' } };
 
     try {
       const r = await fetch(`${WORKER}/v1/pages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parent: { database_id: PROD_DB }, properties })
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ parent:{ database_id: MAINT_DB }, properties:props })
       });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.message || 'Failed to create production');
-      closeAddModal();
-      toast('Production created');
-      await load();
-    } catch (err) {
-      errEl.textContent = 'Could not create production: ' + err.message;
-      errEl.style.display = 'block';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Create Production';
-    }
-  });
+      if (!r.ok) throw new Error();
+      toast('Repair logged','ok');
+      btn.textContent='Logged ✓';
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='Log repair'; },2000);
+      openId=null; load();
+    } catch { toast('Failed to log','err'); btn.disabled=false; btn.textContent='Log repair'; }
+  }
 
   function toast(msg, type='') {
     const t = document.getElementById('toast');
